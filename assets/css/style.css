@@ -24,6 +24,17 @@
   --accent-dim: rgba(91, 157, 249, 0.1);
   --accent-line: rgba(91, 157, 249, 0.32);
 
+  /* A small, muted "toy" palette -- used sparingly for personality on
+     specific content (tags, ratings, book covers, list rhythm), never
+     for nav/links/active states, which stay blue-only so wayfinding
+     is unambiguous. Desaturated + dark-calibrated, not neon. */
+  --toy-violet: #a78bfa;
+  --toy-violet-line: rgba(167, 139, 250, 0.4);
+  --toy-amber: #dcae5c;
+  --toy-amber-line: rgba(220, 174, 92, 0.4);
+  --toy-teal: #6bc4a6;
+  --toy-teal-line: rgba(107, 196, 166, 0.4);
+
   --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
@@ -313,17 +324,22 @@ a:hover {
 }
 
 .stream-item {
-  padding: var(--sp-5) 0;
+  padding: var(--sp-5) 0 var(--sp-5) var(--sp-4);
   border-bottom: 1px solid var(--border-soft);
-  transition: opacity var(--dur) var(--ease);
+  border-left: 2px solid var(--row-color-dim, var(--border));
+  transition: border-color var(--dur) var(--ease);
 }
 
 .stream-item:first-child {
   padding-top: 0;
 }
 
+.stream-item:nth-child(3n+1) { --row-color-dim: var(--toy-violet-line); --row-color: var(--toy-violet); }
+.stream-item:nth-child(3n+2) { --row-color-dim: var(--toy-amber-line); --row-color: var(--toy-amber); }
+.stream-item:nth-child(3n+3) { --row-color-dim: var(--toy-teal-line); --row-color: var(--toy-teal); }
+
 .stream-item:hover {
-  opacity: 1;
+  border-left-color: var(--row-color);
 }
 
 .stream-meta {
@@ -466,7 +482,18 @@ a:hover {
 
 .github-repo-list--page .github-repo {
   padding-bottom: var(--sp-5);
+  padding-left: var(--sp-4);
   border-bottom: 1px solid var(--border-soft);
+  border-left: 2px solid var(--row-color-dim, var(--border));
+  transition: border-color var(--dur) var(--ease);
+}
+
+.github-repo-list--page .github-repo:nth-child(3n+1) { --row-color-dim: var(--toy-violet-line); --row-color: var(--toy-violet); }
+.github-repo-list--page .github-repo:nth-child(3n+2) { --row-color-dim: var(--toy-amber-line); --row-color: var(--toy-amber); }
+.github-repo-list--page .github-repo:nth-child(3n+3) { --row-color-dim: var(--toy-teal-line); --row-color: var(--toy-teal); }
+
+.github-repo-list--page .github-repo:hover {
+  border-left-color: var(--row-color);
 }
 
 .github-repo-list--page .github-repo-name {
@@ -479,6 +506,7 @@ a:hover {
 .github-repo-list--page .github-repo--featured {
   padding-bottom: var(--sp-6);
   border-bottom: 1px solid var(--border);
+  border-left: none;
   position: relative;
   padding-left: var(--sp-4);
 }
@@ -750,19 +778,22 @@ a:hover {
 
 .tag {
   display: inline-block;
-  border: 1px solid var(--border);
+  border: 1px solid var(--tag-line, var(--border));
   border-radius: 3px;
   padding: 0.08rem 0.5rem;
   font-size: 0.72rem;
   font-weight: 500;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
-.tag:hover {
-  color: var(--accent);
-  border-color: var(--accent-line);
-}
+.tag:nth-of-type(3n+1) { --tag-line: var(--toy-violet-line); }
+.tag:nth-of-type(3n+2) { --tag-line: var(--toy-amber-line); }
+.tag:nth-of-type(3n+3) { --tag-line: var(--toy-teal-line); }
+
+.tag:nth-of-type(3n+1):hover { color: var(--toy-violet); border-color: var(--toy-violet); }
+.tag:nth-of-type(3n+2):hover { color: var(--toy-amber); border-color: var(--toy-amber); }
+.tag:nth-of-type(3n+3):hover { color: var(--toy-teal); border-color: var(--toy-teal); }
 
 .post-body {
   max-width: 68ch;
@@ -890,19 +921,23 @@ a:hover {
   flex-direction: column;
 }
 
+.cover-card--purple, .cover-card--orange { --shelf-color: var(--toy-violet); --shelf-line: var(--toy-violet-line); }
+.cover-card--pink, .cover-card--yellow { --shelf-color: var(--toy-amber); --shelf-line: var(--toy-amber-line); }
+.cover-card--teal, .cover-card--green { --shelf-color: var(--toy-teal); --shelf-line: var(--toy-teal-line); }
+
 .cover-img {
   width: 100%;
   max-width: 140px;
   aspect-ratio: 2 / 3;
   object-fit: cover;
   border-radius: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--shelf-line, var(--border));
   background: var(--bg-raised);
   transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 
 .cover-card:hover .cover-img {
-  border-color: var(--accent-line);
+  border-color: var(--shelf-color, var(--accent-line));
   transform: translateY(-2px);
 }
 
@@ -928,7 +963,7 @@ a:hover {
 }
 
 .stars {
-  color: var(--accent);
+  color: var(--toy-amber);
   letter-spacing: 0.05em;
   font-size: 0.78rem;
 }
