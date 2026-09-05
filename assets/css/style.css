@@ -284,89 +284,60 @@ a:hover {
 .theme-toggle-track {
   position: relative;
   display: block;
-  width: 50px;
-  height: 26px;
+  width: 58px;
+  height: 30px;
   border-radius: 999px;
-  background: var(--bg-raised);
+  background: var(--bg);
   border: 1px solid var(--border);
-  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
-}
-
-.theme-toggle-thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--bg);
-  transform: translateX(0);
-  transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1), background var(--dur) var(--ease);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color var(--dur) var(--ease);
 }
 
 .theme-toggle:hover .theme-toggle-track {
   border-color: var(--accent-line);
 }
 
-.theme-toggle:active .theme-toggle-thumb {
-  transform: translateX(0) scale(0.88);
-}
-
-.theme-toggle-thumb .icon-sun,
-.theme-toggle-thumb .icon-moon {
+/* A small glossy 3D ball -- a plain white marble in dark mode, a
+   shiny rainbow gumball in the light/"toy" theme. The state lives
+   entirely in the ball, no icon needed. It rolls (rotates) as it
+   slides, like an actual ball would. */
+.theme-toggle-thumb {
   position: absolute;
-  transition: opacity 320ms var(--ease), transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 22%, rgba(255, 255, 255, 0) 45%),
+    radial-gradient(circle at 70% 78%, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 55%),
+    radial-gradient(circle at 40% 35%, #ffffff 0%, #f1f1f1 45%, #d6d6d6 80%, #bcbcbc 100%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  transform: translateX(0) rotate(0deg);
+  transition: transform 480ms cubic-bezier(0.34, 1.56, 0.64, 1), background 320ms var(--ease);
 }
 
-.theme-toggle-thumb .icon-sun {
-  opacity: 0;
-  transform: rotate(90deg) scale(0.4);
-}
-
-.theme-toggle-thumb .icon-moon {
-  opacity: 1;
-  transform: rotate(0deg) scale(1);
+.theme-toggle:active .theme-toggle-thumb {
+  transform: translateX(0) rotate(0deg) scale(0.88);
 }
 
 html[data-theme="light"] .theme-toggle-thumb {
-  transform: translateX(24px);
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 20%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 68% 80%, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0) 55%),
+    conic-gradient(from 220deg, #6b46c1, #c23f74, #c1591f, #b3860c, #2f8f5b, #157f73, #6b46c1);
+  transform: translateX(28px) rotate(380deg);
 }
 
 html[data-theme="light"] .theme-toggle:active .theme-toggle-thumb {
-  transform: translateX(24px) scale(0.88);
+  transform: translateX(28px) rotate(380deg) scale(0.88);
 }
 
-html[data-theme="light"] .theme-toggle-thumb .icon-sun {
-  opacity: 1;
-  transform: rotate(0deg) scale(1);
-}
-
-html[data-theme="light"] .theme-toggle-thumb .icon-moon {
-  opacity: 0;
-  transform: rotate(-90deg) scale(0.4);
-}
-
-/* The light ("origami") theme gets its own chunkier, sticker-shadow
-   take on the same control, matching the rest of that theme. */
+/* The light ("origami") theme's track gets a touch of its own chunkier
+   language, matching the rest of that theme. */
 html[data-theme="light"] .theme-toggle-track {
-  background: var(--card-bg);
-  border: 2.5px solid var(--border);
-  box-shadow: 3px 3px 0 var(--purple);
-  transition: box-shadow var(--dur) var(--ease);
-}
-
-html[data-theme="light"] .theme-toggle:hover .theme-toggle-track {
-  box-shadow: 4px 4px 0 var(--pink);
-}
-
-html[data-theme="light"] .theme-toggle-thumb {
-  background: var(--yellow);
-  color: var(--bg);
-  box-shadow: 0 0 0 2px var(--border);
+  border: 2px solid var(--border);
+  box-shadow: inset 0 2px 4px rgba(43, 36, 24, 0.25);
 }
 
 /* Disable the browser's default cross-fade so only our circular
