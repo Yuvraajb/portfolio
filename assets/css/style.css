@@ -452,9 +452,6 @@ a:hover {
 }
 
 .github-repo-name {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
   font-family: var(--font-mono);
   font-weight: 500;
   color: var(--ink);
@@ -464,19 +461,6 @@ a:hover {
 
 .github-repo-name:hover {
   color: var(--accent);
-}
-
-.github-repo-icon {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  filter: grayscale(1) opacity(0.6);
-  transition: filter var(--dur) var(--ease);
-}
-
-.github-repo-name:hover .github-repo-icon {
-  filter: none;
 }
 
 .github-repo-desc {
@@ -492,119 +476,61 @@ a:hover {
   font-family: var(--font-mono);
 }
 
-/* ---------- Projects page: app-icon tiles ---------- */
-
-.project-tiles {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: var(--sp-4);
+.github-repo-list--page {
+  gap: var(--sp-5);
 }
 
-.project-tile-link {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-  height: 100%;
-  padding: var(--sp-4);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg-raised);
-  text-decoration: none;
-  color: inherit;
-  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease);
+.github-repo-list--page .github-repo {
+  padding-bottom: var(--sp-5);
+  padding-left: var(--sp-4);
+  border-bottom: 1px solid var(--border-soft);
+  border-left: 2px solid var(--row-color-dim, var(--border));
+  transition: border-color var(--dur) var(--ease);
 }
 
-.project-tile:nth-child(4n+1) .project-tile-link { --tile-line: var(--toy-violet-line); }
-.project-tile:nth-child(4n+2) .project-tile-link { --tile-line: var(--toy-amber-line); }
-.project-tile:nth-child(4n+3) .project-tile-link { --tile-line: var(--toy-teal-line); }
-.project-tile:nth-child(4n+4) .project-tile-link { --tile-line: var(--accent-line); }
+.github-repo-list--page .github-repo:nth-child(3n+1) { --row-color-dim: var(--toy-violet-line); --row-color: var(--toy-violet); }
+.github-repo-list--page .github-repo:nth-child(3n+2) { --row-color-dim: var(--toy-amber-line); --row-color: var(--toy-amber); }
+.github-repo-list--page .github-repo:nth-child(3n+3) { --row-color-dim: var(--toy-teal-line); --row-color: var(--toy-teal); }
 
-.project-tile-link:hover {
-  border-color: var(--tile-line, var(--accent-line));
-  background: var(--bg-inset);
-  transform: translateY(-2px);
+.github-repo-list--page .github-repo:hover {
+  border-left-color: var(--row-color);
 }
 
-.project-tile-icon {
-  display: block;
-  width: 44px;
-  height: 44px;
-  filter: grayscale(1) opacity(0.5);
-  transition: filter var(--dur) var(--ease);
-}
-
-.project-tile-link:hover .project-tile-icon {
-  filter: none;
-}
-
-.project-tile-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.project-tile-name {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 0.88rem;
-  color: var(--ink);
-}
-
-.project-tile-desc {
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--ink-soft);
-}
-
-.project-tile-meta {
-  margin-top: auto;
-  padding-top: var(--sp-2);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--ink-faint);
+.github-repo-list--page .github-repo-name {
+  font-size: 1rem;
 }
 
 /* First (most-recently-pushed) project reads as "selected work" --
-   a bigger tile with more air -- everything after it is a uniform,
-   quieter grid. */
-.project-tile--featured {
-  grid-column: span 2;
+   larger type, more air, a quiet accent flag -- everything after it
+   stays quiet and list-like. */
+.github-repo-list--page .github-repo--featured {
+  padding-bottom: var(--sp-6);
+  border-bottom: 1px solid var(--border);
+  border-left: none;
+  position: relative;
+  padding-left: var(--sp-4);
 }
 
-.project-tile--featured .project-tile-link {
-  flex-direction: row;
-  align-items: flex-start;
-  gap: var(--sp-5);
-  padding: var(--sp-5);
+.github-repo-list--page .github-repo--featured::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.3rem;
+  bottom: var(--sp-6);
+  width: 2px;
+  background: var(--accent-line);
 }
 
-.project-tile--featured .project-tile-icon {
-  width: 72px;
-  height: 72px;
-  flex-shrink: 0;
-}
-
-.project-tile--featured .project-tile-name {
+.github-repo-list--page .github-repo--featured .github-repo-name {
+  font-size: 1.4rem;
   font-family: var(--font-serif);
   font-weight: 600;
-  font-size: 1.2rem;
 }
 
-.project-tile--featured .project-tile-desc {
-  font-size: 0.9rem;
-}
-
-@media (max-width: 480px) {
-  .project-tile--featured {
-    grid-column: span 1;
-  }
-
-  .project-tile--featured .project-tile-link {
-    flex-direction: column;
-  }
+.github-repo-list--page .github-repo--featured .github-repo-desc {
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  max-width: 60ch;
 }
 
 .widget-footer {
