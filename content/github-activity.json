@@ -1,0 +1,56 @@
+{
+  "username": "yuvraajb",
+  "profileUrl": "https://github.com/yuvraajb",
+  "avatarUrl": "https://avatars.githubusercontent.com/u/118530119?v=4",
+  "bio": "Building stuff",
+  "publicRepos": 43,
+  "followers": 3,
+  "updatedAt": "2026-09-05",
+  "repos": [
+    {
+      "name": "portfolio",
+      "url": "https://github.com/Yuvraajb/portfolio",
+      "description": "personal website",
+      "language": "",
+      "stars": 0,
+      "pushedAt": "2026-09-04",
+      "action": "Created"
+    },
+    {
+      "name": "chemcorp-order-automation",
+      "url": "https://github.com/Yuvraajb/chemcorp-order-automation",
+      "description": "",
+      "language": "TypeScript",
+      "stars": 0,
+      "pushedAt": "2026-08-27",
+      "action": "Updated"
+    },
+    {
+      "name": "wc26-intelligence",
+      "url": "https://github.com/Yuvraajb/wc26-intelligence",
+      "description": "Hobby ML platform predicting international football + simulating the 2026 FIFA World Cup (trees, Bayesian, GNNs, stacking, Monte Carlo). Correctly called Spain over Argentina in the final.",
+      "language": "Python",
+      "stars": 0,
+      "pushedAt": "2026-08-13",
+      "action": "Created"
+    },
+    {
+      "name": "blind75",
+      "url": "https://github.com/Yuvraajb/blind75",
+      "description": "My NeetCode.io problem submissions",
+      "language": "Python",
+      "stars": 0,
+      "pushedAt": "2026-07-10",
+      "action": "Updated"
+    },
+    {
+      "name": "neetcode-submissions",
+      "url": "https://github.com/Yuvraajb/neetcode-submissions",
+      "description": "My NeetCode.io problem submissions",
+      "language": "",
+      "stars": 0,
+      "pushedAt": "2026-06-19",
+      "action": "Created"
+    }
+  ]
+}

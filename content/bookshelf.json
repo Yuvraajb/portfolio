@@ -1,0 +1,239 @@
+[
+  {
+    "title": "The Diary of a CEO: The 33 Laws of Business and Life",
+    "author": "Steven Bartlett",
+    "status": "currently-reading",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1720334665l/199017130._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/8920488044?utm_medium=api&utm_source=rss",
+    "isbn": "0593715837"
+  },
+  {
+    "title": "The City: A Global History (Modern Library Chronicles)",
+    "author": "Joel Kotkin",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1390163720l/80854.jpg",
+    "link": "https://www.goodreads.com/review/show/7085576608?utm_medium=api&utm_source=rss",
+    "isbn": "0375756515",
+    "rating": 4,
+    "dateFinished": "2024-12-13"
+  },
+  {
+    "title": "The Quick & Easy Way to Effective Speaking",
+    "author": "Dale Carnegie",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1348090332l/840394.jpg",
+    "link": "https://www.goodreads.com/review/show/7021364085?utm_medium=api&utm_source=rss",
+    "isbn": "2296023576",
+    "rating": 3,
+    "dateFinished": "2024-11-20"
+  },
+  {
+    "title": "Superhuman Social Skills: A Guide to Being Likeable, Winning Friends, and Building Your Social Circle",
+    "author": "Tynan",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1443532709l/26834806._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6593202921?utm_medium=api&utm_source=rss",
+    "isbn": "",
+    "rating": 5,
+    "dateFinished": "2024-09-05"
+  },
+  {
+    "title": "The Psychology of Money: Timeless Lessons on Wealth, Greed, and Happiness",
+    "author": "Morgan Housel",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1581527774l/41881472._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6373241723?utm_medium=api&utm_source=rss",
+    "isbn": "",
+    "rating": 4,
+    "dateFinished": "2024-09-01"
+  },
+  {
+    "title": "The Metamorphosis",
+    "author": "Franz Kafka",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1646444605l/485894._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6786700806?utm_medium=api&utm_source=rss",
+    "isbn": "0553213695",
+    "rating": 2,
+    "dateFinished": "2024-08-24"
+  },
+  {
+    "title": "Meditations",
+    "author": "Marcus Aurelius",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1421618636l/30659.jpg",
+    "link": "https://www.goodreads.com/review/show/6479706101?utm_medium=api&utm_source=rss",
+    "isbn": "0140449337",
+    "rating": 3,
+    "dateFinished": "2024-08-21"
+  },
+  {
+    "title": "Mindset: The New Psychology of Success",
+    "author": "Carol S. Dweck",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1436227012l/40745._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6590269807?utm_medium=api&utm_source=rss",
+    "isbn": "",
+    "dateFinished": "2024-07-26"
+  },
+  {
+    "title": "The Magic of Thinking Big",
+    "author": "David J. Schwartz",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1404632064l/759945.jpg",
+    "link": "https://www.goodreads.com/review/show/6682550571?utm_medium=api&utm_source=rss",
+    "isbn": "0671646788",
+    "rating": 5,
+    "dateFinished": "2024-07-19"
+  },
+  {
+    "title": "A Psalm for the Wild-Built (Monk & Robot, #1)",
+    "author": "Becky Chambers",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1600789291l/40864002._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6479702644?utm_medium=api&utm_source=rss",
+    "isbn": "",
+    "rating": 4,
+    "dateFinished": "2024-06-26"
+  },
+  {
+    "title": "Thinking, Fast and Slow",
+    "author": "Daniel Kahneman",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1317793965l/11468377.jpg",
+    "link": "https://www.goodreads.com/review/show/6585435793?utm_medium=api&utm_source=rss",
+    "isbn": "0374275637",
+    "rating": 1,
+    "dateFinished": "2024-06-21"
+  },
+  {
+    "title": "Dreams from My Father: A Story of Race and Inheritance",
+    "author": "Barack Obama",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1352340675l/88061.jpg",
+    "link": "https://www.goodreads.com/review/show/6479700890?utm_medium=api&utm_source=rss",
+    "isbn": "1921351438",
+    "rating": 3,
+    "dateFinished": "2024-06-16"
+  },
+  {
+    "title": "How to Win Friends & Influence People",
+    "author": "Dale Carnegie",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1442726934l/4865._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6479706462?utm_medium=api&utm_source=rss",
+    "isbn": "",
+    "rating": 5,
+    "dateFinished": "2024-06-02"
+  },
+  {
+    "title": "Relativity: The Special and the General Theory",
+    "author": "Albert Einstein",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1420607613l/15852.jpg",
+    "link": "https://www.goodreads.com/review/show/6553543187?utm_medium=api&utm_source=rss",
+    "isbn": "0143039822",
+    "rating": 1,
+    "dateFinished": "2024-06-02"
+  },
+  {
+    "title": "Sapiens: A Brief History of Humankind",
+    "author": "Yuval Noah Harari",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1703329310l/23692271._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6373238052?utm_medium=api&utm_source=rss",
+    "isbn": "",
+    "rating": 5,
+    "dateFinished": "2024-04-15"
+  },
+  {
+    "title": "The Alchemist",
+    "author": "Paulo Coelho",
+    "status": "read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1654371463l/18144590._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/6399084867?utm_medium=api&utm_source=rss",
+    "isbn": "0062315005",
+    "rating": 5,
+    "dateFinished": "2024-04-03"
+  },
+  {
+    "title": "Don't Shut Up: How to Talk So the World Listens",
+    "author": "Prakhar Gupta",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1705672872l/205639088._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/8734951954?utm_medium=api&utm_source=rss",
+    "isbn": "9357087869"
+  },
+  {
+    "title": "The Power of Now: A Guide to Spiritual Enlightenment",
+    "author": "Eckhart Tolle",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1689947880l/6708.jpg",
+    "link": "https://www.goodreads.com/review/show/8267064859?utm_medium=api&utm_source=rss",
+    "isbn": ""
+  },
+  {
+    "title": "Last Man Standing: The Ascent of Jamie Dimon and JPMorgan Chase",
+    "author": "Duff McDonald",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1349033679l/6551258.jpg",
+    "link": "https://www.goodreads.com/review/show/8197613217?utm_medium=api&utm_source=rss",
+    "isbn": "1416599533"
+  },
+  {
+    "title": "Poor Charlie's Almanack: The Wit and Wisdom of Charles T. Munger",
+    "author": "Charles T. Munger",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1387744370l/944652.jpg",
+    "link": "https://www.goodreads.com/review/show/8120371990?utm_medium=api&utm_source=rss",
+    "isbn": "157864366X"
+  },
+  {
+    "title": "Genius: The Life and Science of Richard Feynman",
+    "author": "James Gleick",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1320409497l/98685.jpg",
+    "link": "https://www.goodreads.com/review/show/8120372222?utm_medium=api&utm_source=rss",
+    "isbn": "0679747044"
+  },
+  {
+    "title": "Einstein: His Life and Universe",
+    "author": "Walter Isaacson",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1328011405l/10884.jpg",
+    "link": "https://www.goodreads.com/review/show/8120372438?utm_medium=api&utm_source=rss",
+    "isbn": "0743264738"
+  },
+  {
+    "title": "Isaac Newton",
+    "author": "James Gleick",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1386745732l/17098.jpg",
+    "link": "https://www.goodreads.com/review/show/8120372524?utm_medium=api&utm_source=rss",
+    "isbn": "1400032954"
+  },
+  {
+    "title": "Everybody Lies: Big Data, New Data, and What the Internet Can Tell Us About Who We Really Are",
+    "author": "Seth Stephens-Davidowitz",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1489069766l/28512671._SY475_.jpg",
+    "link": "https://www.goodreads.com/review/show/8109589501?utm_medium=api&utm_source=rss",
+    "isbn": "0062390856"
+  },
+  {
+    "title": "Neuromarketing: Understanding the Buy Buttons in Your Customer's Brain",
+    "author": "Patrick Renvoisé",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1356166462l/8758568.jpg",
+    "link": "https://www.goodreads.com/review/show/7806268260?utm_medium=api&utm_source=rss",
+    "isbn": "1418570303"
+  },
+  {
+    "title": "The Art of Explanation",
+    "author": "Ros Atkins",
+    "status": "want-to-read",
+    "cover": "https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/books/1670500056l/64631477._SX318_.jpg",
+    "link": "https://www.goodreads.com/review/show/7806268927?utm_medium=api&utm_source=rss",
+    "isbn": "1472298446"
+  }
+]

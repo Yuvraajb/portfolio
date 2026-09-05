@@ -1,0 +1,16 @@
+{
+  "name": "personal-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Yuvraaj Bhatter's personal site -- a hand-rolled, zero-dependency static site generator.",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "npm run build && node scripts/server.js",
+    "serve": "node scripts/server.js",
+    "sync-goodreads": "node scripts/sync-goodreads.js",
+    "sync-blog": "node scripts/sync-blog.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

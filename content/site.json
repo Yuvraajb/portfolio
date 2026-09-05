@@ -1,0 +1,31 @@
+{
+  "name": "Yuvraaj Bhatter",
+  "shortName": "Yuvraaj",
+  "domain": "yuvraaj.dev",
+  "tagline": "I build small, weird, delightful software — like a brain that grows out of your habits.",
+  "bio": "Hi, I'm Yuvraaj — a software developer who likes making things that are a little too ambitious for a side project. Lately that's meant strapping SceneKit to a habit tracker (see: [Synapse](/blog/building-synapse/)) so my to-do list looks like a neuron growing synapses instead of a checklist. This site is where I write about that kind of thing, track what I'm building on GitHub, and log what I'm reading.",
+  "bioShort": "Software developer. Currently growing a digital brain out of daily habits.",
+  "location": "PLACEHOLDER — your city, your country",
+  "avatar": "/assets/images/avatar-placeholder.svg",
+  "email": "hello@example.com",
+  "email_note": "PLACEHOLDER — replace with your real address in content/site.json when you're ready to publish it.",
+  "footerNote": "Built with a hand-rolled static site generator. No frameworks were harmed in the making of this site.",
+  "externalBlog": {
+    "provider": "Substack",
+    "feedUrl": "https://yuvraajb.substack.com/feed",
+    "note": "VERIFIED via Substack's public profile API (handle yuvraajb -> subdomainUrl https://yuvraajb.substack.com). As of 2026-09-05 this publication has 0 published posts, so scripts/sync-blog.js has nothing to pull yet -- run it once posts exist."
+  },
+  "social": [
+    { "label": "GitHub", "url": "https://github.com/Yuvraajb", "icon": "github" },
+    { "label": "Substack", "url": "https://substack.com/@yuvraajb", "icon": "substack" },
+    { "label": "Twitter", "url": "https://twitter.com/bhatteryuvraaj", "icon": "twitter" },
+    { "label": "Goodreads", "url": "https://www.goodreads.com/user/show/165341026-yuvraaj-bhatter", "icon": "book" },
+    { "label": "RSS", "url": "/feed.xml", "icon": "rss" }
+  ],
+  "nav": [
+    { "label": "Blog", "url": "/blog/" },
+    { "label": "Bookshelf", "url": "/bookshelf/" },
+    { "label": "Projects", "url": "/projects/" },
+    { "label": "About", "url": "/about/" }
+  ]
+}
