@@ -75,17 +75,18 @@ function layout(opts) {
     canonicalTag +
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
-    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">\n' +
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">\n' +
     '<link rel="stylesheet" href="/assets/css/style.css">\n' +
     '<link rel="alternate" type="application/rss+xml" title="' + escapeHtml(site.name) + '" href="/feed.xml">\n' +
     '<link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">\n' +
-    '<meta name="theme-color" content="#100c1c">\n' +
+    '<meta name="theme-color" content="#0b0b0c">\n' +
     '<meta property="og:title" content="' + title + '">\n' +
     '<meta property="og:description" content="' + description + '">\n' +
     '<meta property="og:type" content="website">\n' +
     '<meta name="twitter:card" content="summary">\n' +
     '</head>\n' +
     '<body class="' + (opts.bodyClass || '') + '">\n' +
+    '<div class="grid-motif" aria-hidden="true"></div>\n' +
     '<div class="page-wrap">\n' +
     renderHeader(site, opts.activeUrl || '') +
     '<main class="site-main">\n' +
@@ -133,12 +134,13 @@ function renderBookshelfWidget(bookshelf, limit) {
   );
 }
 
-function renderGithubRepoItem(repo, compact) {
+function renderGithubRepoItem(repo, compact, featured) {
   var meta = [];
   if (repo.language) meta.push(repo.language);
   meta.push(repo.action + ' ' + fmtDate(repo.pushedAt));
+  var classes = 'github-repo' + (featured ? ' github-repo--featured' : '');
   return (
-    '<li class="github-repo">' +
+    '<li class="' + classes + '">' +
     '<a class="github-repo-name" href="' + repo.url + '" rel="noopener noreferrer">' + escapeHtml(repo.name) + '</a>' +
     (!compact && repo.description ? '<p class="github-repo-desc">' + escapeHtml(repo.description) + '</p>' : '') +
     '<div class="github-repo-meta">' + meta.map(escapeHtml).join(' &middot; ') + '</div>' +
@@ -159,7 +161,7 @@ function renderGithubWidget(githubActivity) {
 }
 
 function renderGithubPage(site, githubActivity) {
-  var items = githubActivity.repos.map(function (r) { return renderGithubRepoItem(r, false); }).join('');
+  var items = githubActivity.repos.map(function (r, i) { return renderGithubRepoItem(r, false, i === 0); }).join('');
   var content = (
     '<h1 class="page-title">Projects</h1>' +
     '<p class="page-lede">' +
@@ -170,7 +172,7 @@ function renderGithubPage(site, githubActivity) {
     '<ul class="github-repo-list github-repo-list--page">' + items + '</ul>' +
     '<p class="view-all-wrap"><a class="view-all-btn" href="https://github.com/Yuvraajb?tab=repositories" rel="noopener noreferrer">View all repos &rarr;</a></p>'
   );
-  return layout({ site: site, title: 'Projects', activeUrl: '/projects/', content: content });
+  return layout({ site: site, title: 'Projects', activeUrl: '/projects/', content: content, bodyClass: 'page-projects' });
 }
 
 function renderHome(site, streamEntries, bookshelf, githubActivity, bioHtml) {
@@ -193,7 +195,7 @@ function renderHome(site, streamEntries, bookshelf, githubActivity, bioHtml) {
 function renderPostList(site, posts) {
   var items = posts.map(renderStreamItem).join('\n');
   var content = '<h1 class="page-title">Blog</h1><p class="page-lede">Long-form posts. Also available as an <a href="/feed.xml">RSS feed</a>.</p><section class="stream">' + items + '</section>';
-  return layout({ site: site, title: 'Blog', activeUrl: '/blog/', content: content });
+  return layout({ site: site, title: 'Blog', activeUrl: '/blog/', content: content, bodyClass: 'page-blog' });
 }
 
 function renderPost(site, post) {
@@ -217,7 +219,8 @@ function renderPost(site, post) {
     description: post.excerpt,
     activeUrl: '/blog/',
     content: content,
-    canonicalUrl: post.external ? post.link : null
+    canonicalUrl: post.external ? post.link : null,
+    bodyClass: 'page-post'
   });
 }
 
@@ -255,7 +258,7 @@ function renderBookshelfPage(site, bookshelf) {
     '<p class="page-lede">What I’m reading, have read, and want to get to.</p>' +
     sections
   );
-  return layout({ site: site, title: 'Bookshelf', activeUrl: '/bookshelf/', content: content });
+  return layout({ site: site, title: 'Bookshelf', activeUrl: '/bookshelf/', content: content, bodyClass: 'page-bookshelf' });
 }
 
 function renderAboutPage(site, bodyHtml) {
