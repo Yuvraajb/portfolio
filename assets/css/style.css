@@ -14,7 +14,7 @@
 
   --ink: #e9e6df;
   --ink-soft: #9d998f;
-  --ink-faint: #6c685f;
+  --ink-faint: #837e72;
 
   --border: #26262a;
   --border-soft: #1a1a1c;
@@ -256,7 +256,7 @@ a:hover {
   margin: 0 0 var(--sp-7);
   padding-left: var(--sp-5);
   border-left: 2px solid var(--accent-line);
-  max-width: 42ch;
+  max-width: 48ch;
 }
 
 .intro p {
