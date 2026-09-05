@@ -9,6 +9,44 @@ function fmtDate(iso) {
   return months[d.getUTCMonth()] + ' ' + d.getUTCDate() + ', ' + d.getUTCFullYear();
 }
 
+/* Runs synchronously in <head>, before first paint, so there's no
+   flash of the wrong theme. Reads a saved preference (or falls back
+   to the OS setting) and stamps it on <html> immediately; the click
+   handler + circular "reveal" transition are wired up once the DOM
+   is ready. Zero dependencies, respects prefers-reduced-motion. */
+var THEME_BOOTSTRAP_JS = (
+  '(function(){' +
+  'var root=document.documentElement;' +
+  'var saved=null;try{saved=localStorage.getItem("theme");}catch(e){}' +
+  'var initial=saved||((window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark");' +
+  'root.setAttribute("data-theme",initial);' +
+  'function apply(t){' +
+  'root.setAttribute("data-theme",t);' +
+  'try{localStorage.setItem("theme",t);}catch(e){}' +
+  'var btn=document.getElementById("theme-toggle");' +
+  'if(btn)btn.setAttribute("aria-pressed",t==="light"?"true":"false");' +
+  '}' +
+  'document.addEventListener("DOMContentLoaded",function(){' +
+  'var btn=document.getElementById("theme-toggle");' +
+  'if(!btn)return;' +
+  'btn.setAttribute("aria-pressed",root.getAttribute("data-theme")==="light"?"true":"false");' +
+  'btn.addEventListener("click",function(e){' +
+  'var next=root.getAttribute("data-theme")==="light"?"dark":"light";' +
+  'var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;' +
+  'if(document.startViewTransition&&!reduce){' +
+  'var x=e.clientX,y=e.clientY;' +
+  'var t=document.startViewTransition(function(){apply(next);});' +
+  't.ready.then(function(){' +
+  'var r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));' +
+  'root.animate({clipPath:["circle(0px at "+x+"px "+y+"px)","circle("+r+"px at "+x+"px "+y+"px)"]},' +
+  '{duration:550,easing:"cubic-bezier(0.65,0,0.35,1)",pseudoElement:"::view-transition-new(root)"});' +
+  '});' +
+  '}else{apply(next);}' +
+  '});' +
+  '});' +
+  '})();'
+);
+
 function icon(name) {
   var icons = {
     github: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>',
@@ -36,6 +74,26 @@ function renderSocial(site) {
   return '<div class="social-links">' + items + '</div>';
 }
 
+function renderThemeToggle() {
+  var sun = '<svg class="icon-sun" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="5" fill="currentColor"/>' +
+    '<g stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+    '<line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>' +
+    '<line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>' +
+    '<line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/>' +
+    '<line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>' +
+    '</g></svg>';
+  var moon = '<svg class="icon-moon" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true">' +
+    '<path fill="currentColor" d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z"/></svg>';
+  return (
+    '<button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch color theme" aria-pressed="false">' +
+    '<span class="theme-toggle-track">' +
+    '<span class="theme-toggle-thumb">' + sun + moon + '</span>' +
+    '</span>' +
+    '</button>'
+  );
+}
+
 function renderHeader(site, activeUrl) {
   return (
     '<header class="site-header h-card">' +
@@ -43,7 +101,10 @@ function renderHeader(site, activeUrl) {
     '<img class="avatar u-photo" src="' + site.avatar + '" alt="' + escapeHtml(site.name) + '" width="56" height="56">' +
     '<span class="site-title p-name">' + escapeHtml(site.name) + '</span>' +
     '</a>' +
+    '<div class="site-header-right">' +
     renderNav(site, activeUrl) +
+    renderThemeToggle() +
+    '</div>' +
     '</header>'
   );
 }
@@ -75,7 +136,7 @@ function layout(opts) {
     canonicalTag +
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
-    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">\n' +
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">\n' +
     '<link rel="stylesheet" href="/assets/css/style.css">\n' +
     '<link rel="alternate" type="application/rss+xml" title="' + escapeHtml(site.name) + '" href="/feed.xml">\n' +
     '<link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">\n' +
@@ -84,6 +145,7 @@ function layout(opts) {
     '<meta property="og:description" content="' + description + '">\n' +
     '<meta property="og:type" content="website">\n' +
     '<meta name="twitter:card" content="summary">\n' +
+    '<script>' + THEME_BOOTSTRAP_JS + '</script>\n' +
     '</head>\n' +
     '<body class="' + (opts.bodyClass || '') + '">\n' +
     '<div class="grid-motif" aria-hidden="true"></div>\n' +
