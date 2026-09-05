@@ -262,7 +262,7 @@ a:hover {
   transform: scaleX(1);
 }
 
-/* ---------- Theme toggle ---------- */
+/* ---------- Theme toggle (built on Shoelace's <sl-switch>) ---------- */
 
 .site-header-right {
   display: flex;
@@ -270,78 +270,59 @@ a:hover {
   gap: var(--sp-4);
 }
 
+/* Shoelace exposes sizing via these custom properties (see their
+   sl-switch docs) rather than needing to fight the component's own
+   box model. */
 .theme-toggle {
-  appearance: none;
-  border: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
+  --width: 58px;
+  --height: 30px;
+  --thumb-size: 24px;
   flex-shrink: 0;
-  -webkit-tap-highlight-color: transparent;
 }
 
-.theme-toggle-track {
-  position: relative;
-  display: block;
-  width: 58px;
-  height: 30px;
-  border-radius: 999px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+/* The "control" part is the track. Shoelace's default theme draws a
+   visible border on it (the "black border" this replaces) -- removed
+   in favor of an inset groove shadow so the ball reads as sitting in
+   a socket. */
+.theme-toggle::part(control) {
+  background-color: var(--bg);
+  border: none;
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.06);
-  transition: border-color var(--dur) var(--ease);
+  transition: box-shadow var(--dur) var(--ease);
 }
 
-.theme-toggle:hover .theme-toggle-track {
-  border-color: var(--accent-line);
+.theme-toggle:hover::part(control) {
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px var(--accent-line);
+}
+
+.theme-toggle:focus-visible::part(control) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* A small glossy 3D ball -- a plain white marble in dark mode, a
-   shiny red ball in the light/"toy" theme. The state lives entirely
-   in the ball, no icon needed. It rolls (rotates a full turn) as it
-   slides, like an actual ball would.
-   Note: the track's border-width must stay identical between themes
-   -- with box-sizing: border-box, a thicker border shifts the padding
-   box that these absolute offsets/translateX are measured against,
-   which throws the ball off-center. Vary box-shadow/background for
-   theme flavor instead of border thickness. */
-.theme-toggle-thumb {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+   shiny red ball once checked (the light/"toy" theme). The state
+   lives entirely in the ball, no icon needed. Position/sliding is
+   left entirely to Shoelace; only appearance (background/shadow) is
+   overridden here so it can't fight the library's own transform. */
+.theme-toggle::part(thumb) {
   background:
     radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.35) 22%, rgba(255, 255, 255, 0) 45%),
     radial-gradient(circle at 70% 78%, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0) 55%),
     radial-gradient(circle at 40% 35%, #ffffff 0%, #f1f1f1 45%, #d6d6d6 80%, #bcbcbc 100%);
+  border: none;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08);
-  transform: translateX(0) rotate(0deg);
-  transition: transform 480ms cubic-bezier(0.34, 1.56, 0.64, 1), background 320ms var(--ease);
+  transition: background 320ms var(--ease);
 }
 
-.theme-toggle:active .theme-toggle-thumb {
-  transform: translateX(0) rotate(0deg) scale(0.88);
-}
-
-html[data-theme="light"] .theme-toggle-thumb {
+.theme-toggle[checked]::part(thumb) {
   background:
     radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 20%, rgba(255, 255, 255, 0) 42%),
     radial-gradient(circle at 68% 80%, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 55%),
     radial-gradient(circle at 40% 35%, #ff6b5e 0%, #e8392a 45%, #b8241a 80%, #8a170f 100%);
-  transform: translateX(28px) rotate(360deg);
 }
 
-html[data-theme="light"] .theme-toggle:active .theme-toggle-thumb {
-  transform: translateX(28px) rotate(360deg) scale(0.88);
-}
-
-/* The light ("origami") theme's track gets a touch of its own chunkier
-   language (deeper groove shadow), matching the rest of that theme --
-   same border-width as dark, see note above. */
-html[data-theme="light"] .theme-toggle-track {
+.theme-toggle[checked]::part(control) {
   box-shadow: inset 0 2px 4px rgba(43, 36, 24, 0.3);
 }
 

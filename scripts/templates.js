@@ -11,9 +11,13 @@ function fmtDate(iso) {
 
 /* Runs synchronously in <head>, before first paint, so there's no
    flash of the wrong theme. Reads a saved preference (or falls back
-   to the OS setting) and stamps it on <html> immediately; the click
-   handler + circular "reveal" transition are wired up once the DOM
-   is ready. Zero dependencies, respects prefers-reduced-motion. */
+   to the OS setting) and stamps it on <html> immediately. Once the
+   Shoelace <sl-switch> (loaded async as a module, see layout() head)
+   has upgraded and the DOM is ready, its checked state is synced and
+   its "sl-change" event drives the theme + the circular "reveal"
+   transition. Setting .checked pre-upgrade is safe -- Lit-based
+   elements (which Shoelace is built on) capture instance properties
+   set before upgrade and re-apply them once defined. */
 var THEME_BOOTSTRAP_JS = (
   '(function(){' +
   'var root=document.documentElement;' +
@@ -23,18 +27,18 @@ var THEME_BOOTSTRAP_JS = (
   'function apply(t){' +
   'root.setAttribute("data-theme",t);' +
   'try{localStorage.setItem("theme",t);}catch(e){}' +
-  'var btn=document.getElementById("theme-toggle");' +
-  'if(btn)btn.setAttribute("aria-pressed",t==="light"?"true":"false");' +
   '}' +
   'document.addEventListener("DOMContentLoaded",function(){' +
-  'var btn=document.getElementById("theme-toggle");' +
-  'if(!btn)return;' +
-  'btn.setAttribute("aria-pressed",root.getAttribute("data-theme")==="light"?"true":"false");' +
-  'btn.addEventListener("click",function(e){' +
-  'var next=root.getAttribute("data-theme")==="light"?"dark":"light";' +
+  'var sw=document.getElementById("theme-toggle");' +
+  'if(!sw)return;' +
+  'sw.checked=root.getAttribute("data-theme")==="light";' +
+  'var lastX=innerWidth/2,lastY=0;' +
+  'sw.addEventListener("click",function(e){lastX=e.clientX;lastY=e.clientY;});' +
+  'sw.addEventListener("sl-change",function(){' +
+  'var next=sw.checked?"light":"dark";' +
   'var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;' +
   'if(document.startViewTransition&&!reduce){' +
-  'var x=e.clientX,y=e.clientY;' +
+  'var x=lastX,y=lastY;' +
   'var t=document.startViewTransition(function(){apply(next);});' +
   't.ready.then(function(){' +
   'var r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));' +
@@ -75,13 +79,7 @@ function renderSocial(site) {
 }
 
 function renderThemeToggle() {
-  return (
-    '<button type="button" id="theme-toggle" class="theme-toggle" aria-label="Switch color theme" aria-pressed="false">' +
-    '<span class="theme-toggle-track">' +
-    '<span class="theme-toggle-thumb"></span>' +
-    '</span>' +
-    '</button>'
-  );
+  return '<sl-switch id="theme-toggle" class="theme-toggle" aria-label="Switch color theme"></sl-switch>';
 }
 
 function renderHeader(site, activeUrl) {
@@ -128,6 +126,8 @@ function layout(opts) {
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">\n' +
     '<link rel="stylesheet" href="/assets/css/style.css">\n' +
+    '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2/cdn/themes/light.css">\n' +
+    '<script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2/cdn/shoelace-autoloader.js"></script>\n' +
     '<link rel="alternate" type="application/rss+xml" title="' + escapeHtml(site.name) + '" href="/feed.xml">\n' +
     '<link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">\n' +
     '<meta name="theme-color" content="#0b0b0c">\n' +
