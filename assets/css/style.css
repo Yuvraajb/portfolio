@@ -298,9 +298,14 @@ a:hover {
 }
 
 /* A small glossy 3D ball -- a plain white marble in dark mode, a
-   shiny rainbow gumball in the light/"toy" theme. The state lives
-   entirely in the ball, no icon needed. It rolls (rotates) as it
-   slides, like an actual ball would. */
+   shiny red ball in the light/"toy" theme. The state lives entirely
+   in the ball, no icon needed. It rolls (rotates a full turn) as it
+   slides, like an actual ball would.
+   Note: the track's border-width must stay identical between themes
+   -- with box-sizing: border-box, a thicker border shifts the padding
+   box that these absolute offsets/translateX are measured against,
+   which throws the ball off-center. Vary box-shadow/background for
+   theme flavor instead of border thickness. */
 .theme-toggle-thumb {
   position: absolute;
   top: 3px;
@@ -324,20 +329,20 @@ a:hover {
 html[data-theme="light"] .theme-toggle-thumb {
   background:
     radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 20%, rgba(255, 255, 255, 0) 42%),
-    radial-gradient(circle at 68% 80%, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0) 55%),
-    conic-gradient(from 220deg, #6b46c1, #c23f74, #c1591f, #b3860c, #2f8f5b, #157f73, #6b46c1);
-  transform: translateX(28px) rotate(380deg);
+    radial-gradient(circle at 68% 80%, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0) 55%),
+    radial-gradient(circle at 40% 35%, #ff6b5e 0%, #e8392a 45%, #b8241a 80%, #8a170f 100%);
+  transform: translateX(28px) rotate(360deg);
 }
 
 html[data-theme="light"] .theme-toggle:active .theme-toggle-thumb {
-  transform: translateX(28px) rotate(380deg) scale(0.88);
+  transform: translateX(28px) rotate(360deg) scale(0.88);
 }
 
 /* The light ("origami") theme's track gets a touch of its own chunkier
-   language, matching the rest of that theme. */
+   language (deeper groove shadow), matching the rest of that theme --
+   same border-width as dark, see note above. */
 html[data-theme="light"] .theme-toggle-track {
-  border: 2px solid var(--border);
-  box-shadow: inset 0 2px 4px rgba(43, 36, 24, 0.25);
+  box-shadow: inset 0 2px 4px rgba(43, 36, 24, 0.3);
 }
 
 /* Disable the browser's default cross-fade so only our circular
