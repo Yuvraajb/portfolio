@@ -20,6 +20,101 @@ function icon(name) {
   return icons[name] || '';
 }
 
+/* ---------- Abstract project icons ----------
+   Deterministic, dependency-free "app icon" style marks for the
+   Projects tiles -- a small generative visual per repo, derived from
+   its name so it's stable across rebuilds. Grey-by-default / color-
+   on-hover is handled in CSS (a grayscale filter), so the SVGs
+   themselves can just be drawn in color. */
+
+var ICON_PALETTE = ['#5b9df9', '#a78bfa', '#dcae5c', '#6bc4a6'];
+
+function hashString(str) {
+  var h = 2166136261;
+  for (var i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed) {
+  var a = seed;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+var ICON_SHAPES = [
+  function orbits(rng, c1, c2) {
+    var r1 = (10 + rng() * 6).toFixed(1), r2 = (8 + rng() * 5).toFixed(1);
+    var x1 = (15 + rng() * 8).toFixed(1), y1 = (15 + rng() * 8).toFixed(1);
+    var x2 = (29 + rng() * 6).toFixed(1), y2 = (28 + rng() * 7).toFixed(1);
+    return '<circle cx="' + x1 + '" cy="' + y1 + '" r="' + r1 + '" fill="' + c1 + '"/>' +
+      '<circle cx="' + x2 + '" cy="' + y2 + '" r="' + r2 + '" fill="' + c2 + '" opacity="0.85"/>';
+  },
+  function bars(rng, c1, c2) {
+    var out = '';
+    var colors = [c1, c2, c1];
+    for (var i = 0; i < 3; i++) {
+      var x = 6 + i * 13 + rng() * 2;
+      var h = 18 + rng() * 14;
+      var y = 24 - h / 2 + (rng() - 0.5) * 6;
+      out += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="7" height="' + h.toFixed(1) + '" rx="3.5" fill="' + colors[i] + '" transform="rotate(-18 ' + (x + 3.5).toFixed(1) + ' ' + (y + h / 2).toFixed(1) + ')"/>';
+    }
+    return out;
+  },
+  function dots(rng, c1, c2) {
+    var out = '';
+    var n = 3, spacing = 12, offset = 8;
+    var hi1 = Math.floor(rng() * 9);
+    var hi2 = (hi1 + 4) % 9;
+    for (var idx = 0; idx < 9; idx++) {
+      var cx = offset + (idx % n) * spacing;
+      var cy = offset + Math.floor(idx / n) * spacing;
+      var isHi = idx === hi1 || idx === hi2;
+      var fill = idx === hi1 ? c1 : (idx === hi2 ? c2 : 'currentColor');
+      out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (isHi ? 3.4 : 2.1) + '" fill="' + fill + '" opacity="' + (isHi ? 1 : 0.3) + '"/>';
+    }
+    return out;
+  },
+  function triangles(rng, c1, c2) {
+    function tri(cx, cy, size, rot, fill, op) {
+      var pts = [[cx, cy - size], [cx - size * 0.87, cy + size * 0.5], [cx + size * 0.87, cy + size * 0.5]];
+      var pointsAttr = pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
+      return '<polygon points="' + pointsAttr + '" fill="' + fill + '" opacity="' + op + '" transform="rotate(' + rot.toFixed(1) + ' ' + cx + ' ' + cy + ')"/>';
+    }
+    return tri(18, 30, 11, rng() * 30 - 15, c1, 1) + tri(31, 19, 9, rng() * 30 - 15, c2, 0.85);
+  },
+  function ring(rng, c1, c2) {
+    var r = 13 + rng() * 3;
+    var dx = (24 + r * 0.7).toFixed(1), dy = (24 - r * 0.4).toFixed(1);
+    return '<circle cx="24" cy="24" r="' + r.toFixed(1) + '" fill="none" stroke="' + c1 + '" stroke-width="5"/>' +
+      '<circle cx="' + dx + '" cy="' + dy + '" r="4" fill="' + c2 + '"/>';
+  },
+  function cross(rng, c1, c2) {
+    var len = 16 + rng() * 6;
+    var a = (24 - len).toFixed(1), b = (24 + len).toFixed(1);
+    return '<line x1="' + a + '" y1="24" x2="' + b + '" y2="24" stroke="' + c1 + '" stroke-width="4" stroke-linecap="round" transform="rotate(20 24 24)"/>' +
+      '<line x1="24" y1="' + a + '" x2="24" y2="' + b + '" stroke="' + c2 + '" stroke-width="4" stroke-linecap="round" transform="rotate(20 24 24)"/>';
+  }
+];
+
+function buildAbstractIcon(seedText) {
+  var rng = mulberry32(hashString(seedText));
+  var i1 = Math.floor(rng() * ICON_PALETTE.length);
+  var remaining = ICON_PALETTE.filter(function (_, idx) { return idx !== i1; });
+  var c1 = ICON_PALETTE[i1];
+  var c2 = remaining[Math.floor(rng() * remaining.length)];
+  var shapeFn = ICON_SHAPES[Math.floor(rng() * ICON_SHAPES.length)];
+  var inner = shapeFn(rng, c1, c2);
+  return '<svg viewBox="0 0 48 48" width="100%" height="100%" aria-hidden="true" focusable="false">' + inner + '</svg>';
+}
+
 function renderNav(site, activeUrl) {
   var items = site.nav.map(function (item) {
     var active = item.url === activeUrl ? ' aria-current="page"' : '';
@@ -141,7 +236,10 @@ function renderGithubRepoItem(repo, compact, featured) {
   var classes = 'github-repo' + (featured ? ' github-repo--featured' : '');
   return (
     '<li class="' + classes + '">' +
-    '<a class="github-repo-name" href="' + repo.url + '" rel="noopener noreferrer">' + escapeHtml(repo.name) + '</a>' +
+    '<a class="github-repo-name" href="' + repo.url + '" rel="noopener noreferrer">' +
+    '<span class="github-repo-icon">' + buildAbstractIcon(repo.name) + '</span>' +
+    escapeHtml(repo.name) +
+    '</a>' +
     (!compact && repo.description ? '<p class="github-repo-desc">' + escapeHtml(repo.description) + '</p>' : '') +
     '<div class="github-repo-meta">' + meta.map(escapeHtml).join(' &middot; ') + '</div>' +
     '</li>'
@@ -160,8 +258,27 @@ function renderGithubWidget(githubActivity) {
   );
 }
 
+function renderProjectTile(repo, featured) {
+  var meta = [];
+  if (repo.language) meta.push(repo.language);
+  meta.push(repo.action + ' ' + fmtDate(repo.pushedAt));
+  var classes = 'project-tile' + (featured ? ' project-tile--featured' : '');
+  return (
+    '<li class="' + classes + '">' +
+    '<a class="project-tile-link" href="' + repo.url + '" rel="noopener noreferrer">' +
+    '<span class="project-tile-icon">' + buildAbstractIcon(repo.name) + '</span>' +
+    '<span class="project-tile-body">' +
+    '<span class="project-tile-name">' + escapeHtml(repo.name) + '</span>' +
+    (repo.description ? '<span class="project-tile-desc">' + escapeHtml(repo.description) + '</span>' : '') +
+    '<span class="project-tile-meta">' + meta.map(escapeHtml).join(' &middot; ') + '</span>' +
+    '</span>' +
+    '</a>' +
+    '</li>'
+  );
+}
+
 function renderGithubPage(site, githubActivity) {
-  var items = githubActivity.repos.map(function (r, i) { return renderGithubRepoItem(r, false, i === 0); }).join('');
+  var items = githubActivity.repos.map(function (r, i) { return renderProjectTile(r, i === 0); }).join('');
   var content = (
     '<h1 class="page-title">Projects</h1>' +
     '<p class="page-lede">' +
@@ -169,7 +286,7 @@ function renderGithubPage(site, githubActivity) {
     escapeHtml(String(githubActivity.publicRepos)) + ' public repos, ' + escapeHtml(String(githubActivity.followers)) + ' followers. ' +
     'Last synced ' + fmtDate(githubActivity.updatedAt) + '.' +
     '</p>' +
-    '<ul class="github-repo-list github-repo-list--page">' + items + '</ul>' +
+    '<ul class="project-tiles">' + items + '</ul>' +
     '<p class="view-all-wrap"><a class="view-all-btn" href="https://github.com/Yuvraajb?tab=repositories" rel="noopener noreferrer">View all repos &rarr;</a></p>'
   );
   return layout({ site: site, title: 'Projects', activeUrl: '/projects/', content: content, bodyClass: 'page-projects' });
