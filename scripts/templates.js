@@ -252,8 +252,7 @@ function renderBookshelfPage(site, bookshelf) {
 
   var content = (
     '<h1 class="page-title">Bookshelf</h1>' +
-    '<p class="page-lede">What I’m reading, have read, and want to get to. ' +
-    'See <a href="/README.md">the README</a> in this project for how this list syncs itself from Goodreads.</p>' +
+    '<p class="page-lede">What I’m reading, have read, and want to get to.</p>' +
     sections
   );
   return layout({ site: site, title: 'Bookshelf', activeUrl: '/bookshelf/', content: content });

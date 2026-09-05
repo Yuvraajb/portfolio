@@ -6,7 +6,7 @@
   "bio": "Hi, I'm Yuvraaj — a software developer who likes making things that are a little too ambitious for a side project. Lately that's meant strapping SceneKit to a habit tracker (see: [Synapse](/blog/building-synapse/)) so my to-do list looks like a neuron growing synapses instead of a checklist. This site is where I write about that kind of thing, track what I'm building on GitHub, and log what I'm reading.",
   "bioShort": "Software developer. Currently growing a digital brain out of daily habits.",
   "location": "PLACEHOLDER — your city, your country",
-  "avatar": "/assets/images/avatar-placeholder.svg",
+  "avatar": "/assets/images/pfp.jpeg",
   "email": "hello@example.com",
   "email_note": "PLACEHOLDER — replace with your real address in content/site.json when you're ready to publish it.",
   "footerNote": "Built with a hand-rolled static site generator. No frameworks were harmed in the making of this site.",
