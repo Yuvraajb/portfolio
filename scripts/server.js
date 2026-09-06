@@ -2,15 +2,21 @@
 
 /**
  * Zero-dependency static file server for local preview of public/.
+ * Also serves /api/substack-feed and /api/bookshelf so the blog and
+ * bookshelf pages' live embeds work the same way locally as they do on
+ * Vercel (see api/substack-feed.js and api/bookshelf.js).
  * Usage: node scripts/server.js [port]
  */
 
 var http = require('http');
 var fs = require('fs');
 var path = require('path');
+var feedParser = require('./feed-parser.js');
+var goodreadsParser = require('./goodreads-parser.js');
 
 var PORT = Number(process.argv[2] || process.env.PORT || 4000);
-var PUBLIC_DIR = path.join(__dirname, '..', 'public');
+var ROOT = path.join(__dirname, '..');
+var PUBLIC_DIR = path.join(ROOT, 'public');
 
 var MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -35,7 +41,72 @@ function safeJoin(base, requestPath) {
   return path.join(base, normalized);
 }
 
+function readSiteJson() {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, 'content', 'site.json'), 'utf8'));
+}
+
+function handleSubstackFeed(req, res) {
+  var site;
+  try {
+    site = readSiteJson();
+  } catch (e) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'Could not read content/site.json' }));
+    return;
+  }
+  var feedUrl = site.externalBlog && site.externalBlog.feedUrl;
+  var provider = (site.externalBlog && site.externalBlog.provider) || 'Substack';
+  if (!feedUrl) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'No externalBlog.feedUrl configured in content/site.json' }));
+    return;
+  }
+
+  feedParser.fetchFeed(feedUrl).then(function (posts) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, provider: provider, posts: posts }));
+  }).catch(function (err) {
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: err.message }));
+  });
+}
+
+function handleBookshelf(req, res) {
+  var site;
+  try {
+    site = readSiteJson();
+  } catch (e) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'Could not read content/site.json' }));
+    return;
+  }
+  var userId = site.goodreads && site.goodreads.userId;
+  if (!userId) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'No goodreads.userId configured in content/site.json' }));
+    return;
+  }
+
+  goodreadsParser.fetchBookshelf(userId).then(function (books) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, books: books }));
+  }).catch(function (err) {
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: err.message }));
+  });
+}
+
 var server = http.createServer(function (req, res) {
+  var routePath = req.url.split('?')[0];
+  if (req.method === 'GET' && routePath === '/api/substack-feed') {
+    handleSubstackFeed(req, res);
+    return;
+  }
+  if (req.method === 'GET' && routePath === '/api/bookshelf') {
+    handleBookshelf(req, res);
+    return;
+  }
+
   if (!fs.existsSync(PUBLIC_DIR)) {
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end('public/ does not exist yet. Run "node scripts/build.js" first.');

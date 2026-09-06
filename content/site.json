@@ -3,22 +3,26 @@
   "shortName": "Yuvraaj",
   "domain": "yuvraaj.dev",
   "tagline": "I build small, weird, delightful software — like a brain that grows out of your habits.",
-  "bio": "Hi, I'm Yuvraaj — a software developer who likes making things that are a little too ambitious for a side project. Lately that's meant strapping SceneKit to a habit tracker (see: [Synapse](/blog/building-synapse/)) so my to-do list looks like a neuron growing synapses instead of a checklist. This site is where I write about that kind of thing, track what I'm building on GitHub, and log what I'm reading.",
+  "bio": "I like making things.\n\nSometimes that means building software, sometimes it means figuring out why a piece of hardware works, and sometimes it means sitting at a piano trying to figure out a specific arpeggio.\n\nI’m interested in software engineering, product, and the space where technology meets creativity. I enjoy working through complex problems and building useful, well-designed software.\n\nStill learning, still experimenting, and always looking for the next thing worth building.",
   "bioShort": "Software developer. Currently growing a digital brain out of daily habits.",
   "location": "PLACEHOLDER — your city, your country",
   "avatar": "/assets/images/pfp.jpeg",
   "email": "hello@example.com",
   "email_note": "PLACEHOLDER — replace with your real address in content/site.json when you're ready to publish it.",
-  "footerNote": "Built with a hand-rolled static site generator. No frameworks were harmed in the making of this site.",
   "externalBlog": {
     "provider": "Substack",
     "feedUrl": "https://yuvraajb.substack.com/feed",
-    "note": "VERIFIED via Substack's public profile API (handle yuvraajb -> subdomainUrl https://yuvraajb.substack.com). As of 2026-09-05 this publication has 0 published posts, so scripts/sync-blog.js has nothing to pull yet -- run it once posts exist."
+    "note": "Blog page embeds this feed live client-side via api/substack-feed.js (see scripts/feed-parser.js) -- posts show up automatically, no rebuild needed."
+  },
+  "goodreads": {
+    "userId": "165341026",
+    "profileUrl": "https://www.goodreads.com/user/show/165341026-yuvraaj-bhatter",
+    "note": "Bookshelf page and widget embed these shelves live client-side via api/bookshelf.js (see scripts/goodreads-parser.js) -- new books show up automatically, no rebuild needed."
   },
   "social": [
     { "label": "GitHub", "url": "https://github.com/Yuvraajb", "icon": "github" },
-    { "label": "Substack", "url": "https://substack.com/@yuvraajb", "icon": "substack" },
-    { "label": "Twitter", "url": "https://twitter.com/bhatteryuvraaj", "icon": "twitter" },
+    { "label": "Substack", "url": "https://substack.com/@yuvraajb/posts", "icon": "substack" },
+    { "label": "LinkedIn", "url": "https://www.linkedin.com/in/yuvraajbhatter/", "icon": "linkedin" },
     { "label": "Goodreads", "url": "https://www.goodreads.com/user/show/165341026-yuvraaj-bhatter", "icon": "book" },
     { "label": "RSS", "url": "/feed.xml", "icon": "rss" }
   ],
