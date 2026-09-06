@@ -92,17 +92,18 @@ body {
   -webkit-mask-image: radial-gradient(ellipse 75% 55% at 50% 0%, #000 25%, transparent 72%);
 }
 
+/* Always width-wide, on every page -- the header/nav live in this same
+   container, and having it change width from page to page (it used to
+   be narrower on text-only pages) made the navbar visibly resize as
+   you clicked around. Individual prose blocks (.post-body, .page-lede,
+   etc.) cap their own reading width in ch units, so this doesn't
+   blow out line length. */
 .page-wrap {
-  max-width: var(--width-text);
+  max-width: var(--width-wide);
   margin: 0 auto;
   padding: var(--sp-6) var(--sp-5) var(--sp-8);
   position: relative;
   z-index: 1;
-}
-
-html:not([data-theme="light"]) body.page-home .page-wrap,
-html:not([data-theme="light"]) body.page-bookshelf .page-wrap {
-  max-width: var(--width-wide);
 }
 
 /* The light ("origami") theme predates this wide/narrow distinction
@@ -168,19 +169,17 @@ a:hover {
   border-bottom: 1px solid var(--border);
 }
 
-.site-brand {
+/* Static identity block on the homepage, above the bio -- plain, no
+   link, no hover/animation (the navbar's home link is the animated
+   face logo instead, see .nav-face). */
+.home-identity {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  color: inherit;
-  text-decoration: none;
+  margin-bottom: var(--sp-5);
 }
 
-.site-brand:hover {
-  color: inherit;
-}
-
-.avatar {
+.home-identity-avatar {
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -188,21 +187,9 @@ a:hover {
   background: var(--bg-raised);
   object-fit: cover;
   flex-shrink: 0;
-  transition: border-color var(--dur) var(--ease);
 }
 
-.site-brand:hover .avatar,
-.avatar:focus-visible {
-  border-color: var(--accent-line);
-}
-
-.site-title {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-
-.site-title .p-name {
+.home-identity-name {
   font-family: var(--font-serif);
   font-weight: 600;
   font-size: 1.05rem;
@@ -230,6 +217,7 @@ a:hover {
   letter-spacing: 0.06em;
   color: var(--ink-soft);
   padding: 0.5rem 0.65rem;
+  border: 2.5px solid transparent;
   transition: color var(--dur) var(--ease);
 }
 
@@ -260,6 +248,78 @@ a:hover {
 
 .site-nav a[aria-current="page"]::after {
   transform: scaleX(1);
+}
+
+/* ---------- Navbar face (see renderNavFace) ---------- */
+
+.nav-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  color: var(--ink-faint);
+  outline: none;
+}
+
+.nav-face-svg {
+  width: 30px;
+  height: auto;
+  overflow: visible;
+}
+
+.nav-face .nav-face__eyes,
+.nav-face .nav-face__eye-lid,
+.nav-face .nav-face__mouth-left,
+.nav-face .nav-face__mouth-right,
+.nav-face .nav-face__nose,
+.nav-face .nav-face__pupil {
+  animation: nav-face-eyes 1s 0.3s forwards;
+}
+
+.nav-face .nav-face__eye-lid,
+.nav-face .nav-face__pupil {
+  animation-duration: 4s;
+  animation-delay: 1.3s;
+  animation-iteration-count: infinite;
+}
+
+.nav-face .nav-face__eye-lid { animation-name: nav-face-eye-lid; }
+.nav-face .nav-face__mouth-left { animation-name: nav-face-mouth-left; }
+.nav-face .nav-face__mouth-right { animation-name: nav-face-mouth-right; }
+.nav-face .nav-face__nose { animation-name: nav-face-nose; }
+.nav-face .nav-face__pupil { animation-name: nav-face-pupil; }
+
+@keyframes nav-face-eye-lid {
+  0%, 40%, 45%, 100% { transform: translateY(0); }
+  42.5% { transform: translateY(17.5px); }
+}
+
+@keyframes nav-face-eyes {
+  from { transform: translateY(112.5px); }
+  to { transform: translateY(15px); }
+}
+
+@keyframes nav-face-pupil {
+  0%, 37.5%, 40%, 45%, 87.5%, 100% { stroke-dashoffset: 0; transform: translate(0, 0); }
+  12.5%, 25%, 62.5%, 75% { transform: translate(-35px, 0); }
+  42.5% { stroke-dashoffset: 35; transform: translate(0, 17.5px); }
+}
+
+@keyframes nav-face-mouth-left {
+  from, 50% { stroke-dashoffset: -102; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes nav-face-mouth-right {
+  from, 50% { stroke-dashoffset: 102; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes nav-face-nose {
+  from { transform: translate(0, 0); }
+  to { transform: translate(0, 22.5px); }
 }
 
 /* ---------- Theme toggle (built on Shoelace's <sl-switch>) ---------- */
@@ -345,11 +405,14 @@ a:hover {
   margin: 0 0 var(--sp-7);
   padding-left: var(--sp-5);
   border-left: 2px solid var(--accent-line);
-  max-width: 48ch;
 }
 
 .intro p {
-  margin: 0;
+  margin: 0 0 0.85em;
+}
+
+.intro p:last-child {
+  margin-bottom: 0;
 }
 
 .intro a {
@@ -402,6 +465,7 @@ a:hover {
 }
 
 .stream-item {
+  position: relative;
   padding: var(--sp-5) 0 var(--sp-5) var(--sp-4);
   border-bottom: 1px solid var(--border-soft);
   border-left: 2px solid var(--row-color-dim, var(--border));
@@ -482,6 +546,15 @@ a:hover {
   background-size: 100% 1px;
 }
 
+/* Stretched-link pattern: the title is still the visible/accessible
+   link, but its ::after covers the whole card so clicking or hovering
+   anywhere on the tile works, not just the title text. */
+.stream-title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
 .stream-excerpt {
   margin: 0;
   color: var(--ink-soft);
@@ -539,6 +612,39 @@ a:hover {
 
 .github-repo-name:hover {
   color: var(--accent);
+}
+
+/* Stands in for a project logo -- only shown in the light-mode Projects
+   page grid (see html[data-theme="light"] .github-repo-list--page). */
+.github-repo-tile {
+  display: none;
+}
+
+.github-repo-art {
+  width: 55%;
+  height: 55%;
+  transition: transform 0.3s var(--bounce);
+}
+
+.github-repo:hover .github-repo-art {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+/* Optional real screenshot (content/projects.json "image") -- hidden
+   until hover, when it crossfades over the abstract art to give an
+   actual preview instead of decoration. */
+.github-repo-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.github-repo:hover .github-repo-preview {
+  opacity: 1;
 }
 
 .github-repo-desc {
@@ -640,6 +746,113 @@ a:hover {
   gap: 0.6rem;
 }
 
+/* ---------- Project detail modal (see renderProjectModal) ---------- */
+
+.project-modal[hidden] {
+  display: none;
+}
+
+.project-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+}
+
+.project-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.project-modal-panel {
+  position: relative;
+  max-width: 560px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--card-bg, var(--bg-raised));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: var(--sp-6);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.project-modal-panel h2 {
+  margin: 0 var(--sp-6) var(--sp-2) 0;
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.project-modal-tag {
+  display: inline-block;
+  margin: 0 0 var(--sp-4);
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.project-modal-tag[hidden] {
+  display: none;
+}
+
+.project-modal-desc {
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 var(--sp-4);
+}
+
+.project-modal-meta {
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  margin: 0 0 var(--sp-5);
+}
+
+.project-modal-close {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink-soft);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.project-modal-close:hover {
+  color: var(--ink);
+  border-color: var(--accent-line);
+}
+
+html[data-theme="light"] .project-modal-panel {
+  border: 3px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 8px 8px 0 var(--purple);
+}
+
+html[data-theme="light"] .project-modal-close {
+  border-width: 2px;
+  font-weight: 700;
+}
+
+html[data-theme="light"] .project-modal-tag {
+  border-width: 2px;
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
 /* ---------- Page chrome ---------- */
 
 .page-title {
@@ -654,6 +867,23 @@ a:hover {
   font-weight: 400;
   margin: 0 0 var(--sp-7);
   max-width: 62ch;
+}
+
+/* ---------- Live embeds (see api/substack-feed.js, api/bookshelf.js) ---------- */
+
+.substack-embed {
+  margin: 0 0 var(--sp-7);
+}
+
+.feed-status {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+li.feed-status {
+  list-style: none;
 }
 
 .page-updated {
@@ -783,6 +1013,52 @@ a:hover {
   background: var(--accent);
   animation: terminal-blink 1s steps(1) infinite;
   vertical-align: text-bottom;
+}
+
+/* ---------- Interactive terminal input (see renderInteractiveTerminal) ---------- */
+
+.terminal-log {
+  margin-top: var(--sp-6);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.terminal-log-cmd {
+  color: var(--ink);
+}
+
+.terminal-input-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: text;
+}
+
+.terminal-prompt {
+  color: var(--accent);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.terminal-cmd-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font: inherit;
+  caret-color: var(--accent);
+  padding: 0;
+  min-width: 0;
 }
 
 .terminal .page-body h2 {
@@ -1208,11 +1484,11 @@ html[data-theme="light"] {
   --yellow: #b3860c;
   --orange: #c1591f;
   --green: #2f8f5b;
+  --blue: #3b5bdb;
 
   --serif: 'Poppins', ui-rounded, system-ui, sans-serif;
   --sans: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
-  --max-width: 800px;
   --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
   color-scheme: light;
 }
@@ -1230,9 +1506,9 @@ html[data-theme="light"] body {
 }
 
 html[data-theme="light"] .page-wrap {
-  max-width: var(--max-width);
+  max-width: var(--width-wide);
   margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+  padding: var(--sp-6) 1.5rem 3rem;
   position: relative;
   z-index: 1;
 }
@@ -1240,7 +1516,7 @@ html[data-theme="light"] .page-wrap {
 html[data-theme="light"] h1,
 html[data-theme="light"] h2,
 html[data-theme="light"] h3,
-html[data-theme="light"] .site-title,
+html[data-theme="light"] .home-identity-name,
 html[data-theme="light"] .widget-title,
 html[data-theme="light"] .page-title,
 html[data-theme="light"] .stream-title,
@@ -1279,97 +1555,56 @@ html[data-theme="light"] .visually-hidden {
 
 }
 
-@keyframes float-y__light {
-
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-6px) rotate(2deg); }
-
-}
-
-@keyframes wiggle__light {
-
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  20% { transform: rotate(-8deg) scale(1.05); }
-  40% { transform: rotate(7deg) scale(1.05); }
-  60% { transform: rotate(-5deg) scale(1.03); }
-  80% { transform: rotate(3deg) scale(1.02); }
-
-}
-
 html[data-theme="light"] .site-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem 1.5rem;
-  padding-bottom: 1.5rem;
-  margin-bottom: 2rem;
-  border-bottom: 4px solid var(--border);
+  gap: var(--sp-4) var(--sp-5);
+  padding-bottom: var(--sp-5);
+  margin-bottom: var(--sp-7);
+  border-bottom: 1px solid var(--border);
 }
 
-html[data-theme="light"] .site-brand {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  color: inherit;
-  text-decoration: none;
-  position: relative;
+html[data-theme="light"] .nav-face {
+  color: var(--blue);
 }
 
-html[data-theme="light"] .site-brand:hover {
-  color: inherit;
-}
-
-html[data-theme="light"] .avatar {
-  width: 60px;
-  height: 60px;
+html[data-theme="light"] .home-identity-avatar {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 4px solid var(--border);
+  border: 3px solid #fff;
   background: var(--yellow);
   object-fit: cover;
   flex-shrink: 0;
-  box-shadow: 3px 3px 0 var(--purple);
-  cursor: pointer;
-  animation: float-y__light 5s ease-in-out infinite;
-  transition: box-shadow 0.2s var(--bounce);
+  box-shadow: 2px 2px 0 var(--blue);
 }
 
-html[data-theme="light"] .avatar:hover,
-html[data-theme="light"] .avatar:focus-visible {
-  animation: wiggle__light 0.6s var(--bounce);
-  box-shadow: 4px 4px 0 var(--pink);
-}
-
-html[data-theme="light"] .site-title {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-
-html[data-theme="light"] .site-title .p-name {
+html[data-theme="light"] .home-identity-name {
   font-family: var(--serif);
   font-weight: 700;
   font-size: 1.4rem;
-  color: var(--purple);
+  color: var(--blue);
 }
 
 html[data-theme="light"] .site-nav ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.2rem;
   list-style: none;
   margin: 0;
   padding: 0;
-  font-family: var(--sans);
-  font-weight: 800;
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.72rem;
 }
 
 html[data-theme="light"] .site-nav a {
   display: inline-block;
   text-decoration: none;
   color: var(--ink-soft);
-  padding: 0.35rem 0.75rem;
+  padding: 0.5rem 0.65rem;
   border-radius: 6px;
   border: 2.5px solid transparent;
   transition: transform 0.18s var(--bounce), background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
@@ -1395,7 +1630,11 @@ html[data-theme="light"] .site-nav li:nth-child(6n+6) a[aria-current="page"] { b
 
 html[data-theme="light"] .site-nav a:hover,
 html[data-theme="light"] .site-nav a[aria-current="page"] {
-  transform: translateY(-2px) rotate(-1deg);
+  transform: translateY(-2px);
+}
+
+html[data-theme="light"] .site-nav a::after {
+  content: none;
 }
 
 html[data-theme="light"] .intro {
@@ -1407,11 +1646,16 @@ html[data-theme="light"] .intro {
   background: var(--card-bg);
   border: 3px solid var(--border);
   border-radius: 20px;
-  box-shadow: 6px 6px 0 var(--purple);
+  box-shadow: 6px 6px 0 var(--blue);
+  max-width: none;
 }
 
 html[data-theme="light"] .intro p {
-  margin: 0;
+  margin: 0 0 0.85em;
+}
+
+html[data-theme="light"] .intro p:last-child {
+  margin-bottom: 0;
 }
 
 html[data-theme="light"] .intro a {
@@ -1624,17 +1868,97 @@ html[data-theme="light"] .github-repo-meta {
   font-weight: 700;
 }
 
+/* Projects page only, light mode only: a 2-up grid of bordered
+   "logo" tiles with a caption below, inspired by app-icon style
+   project showcases -- reusing the site's own chunky-outline,
+   sticker-shadow language instead of copying the reference 1:1.
+   Everywhere else (dark mode, the homepage widget) keeps the plain
+   list -- see the shared .github-repo-tile{display:none} default. */
 html[data-theme="light"] .github-repo-list--page {
-  gap: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.75rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+  html[data-theme="light"] .github-repo-list--page {
+    grid-template-columns: 1fr;
+  }
 }
 
 html[data-theme="light"] .github-repo-list--page .github-repo {
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--card-bg-2);
+  padding: 0;
+  border: none;
 }
 
+html[data-theme="light"] .github-repo-list--page .github-repo:nth-child(3n+1) { --tile-color: var(--purple); }
+html[data-theme="light"] .github-repo-list--page .github-repo:nth-child(3n+2) { --tile-color: var(--pink); }
+html[data-theme="light"] .github-repo-list--page .github-repo:nth-child(3n+3) { --tile-color: var(--teal); }
+
 html[data-theme="light"] .github-repo-list--page .github-repo-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  font-size: 1rem;
+}
+
+html[data-theme="light"] .github-repo-list--page .github-repo-tile {
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+  border: 3px solid var(--border);
+  border-radius: 20px;
+  background: var(--card-bg);
+  box-shadow: 6px 6px 0 var(--tile-color);
+  transition: transform 0.2s var(--bounce), box-shadow 0.2s var(--bounce);
+}
+
+html[data-theme="light"] .github-repo-list--page .github-repo:hover .github-repo-tile {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--tile-color);
+}
+
+html[data-theme="light"] .github-repo-list--page .github-repo-label {
+  font-family: var(--sans);
+  font-weight: 800;
   font-size: 1.05rem;
+  color: var(--ink);
+}
+
+html[data-theme="light"] .github-repo-list--page .github-repo-desc {
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0;
+}
+
+html[data-theme="light"] .github-repo-list--page .github-repo-meta {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 0.5rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  font-size: 0.68rem;
+}
+
+/* The dark theme gives the first (featured) project special
+   treatment -- bigger type, an accent bar. The light grid treats
+   every tile the same, so that styling is reset here. */
+html[data-theme="light"] .github-repo-list--page .github-repo--featured {
+  padding-bottom: 0;
+  padding-left: 0;
+  border-bottom: none;
+  position: static;
+}
+
+html[data-theme="light"] .github-repo-list--page .github-repo--featured::before {
+  content: none;
+}
+
+html[data-theme="light"] .github-repo-list--page .github-repo--featured .github-repo-desc {
+  max-width: none;
 }
 
 html[data-theme="light"] .widget-footer {
@@ -1800,6 +2124,27 @@ html[data-theme="light"] .terminal-cursor {
   background: #3ee2c7;
   animation: terminal-blink 1s steps(1) infinite;
   vertical-align: text-bottom;
+}
+
+html[data-theme="light"] .terminal-log {
+  color: #b8b3a4;
+}
+
+html[data-theme="light"] .terminal-log-cmd {
+  color: #f0ede4;
+}
+
+html[data-theme="light"] .terminal-input-line {
+  border-top: 2px solid var(--border);
+}
+
+html[data-theme="light"] .terminal-prompt {
+  color: #3ee2c7;
+}
+
+html[data-theme="light"] .terminal-cmd-input {
+  color: #f0ede4;
+  caret-color: #3ee2c7;
 }
 
 html[data-theme="light"] .terminal .page-body h2 {

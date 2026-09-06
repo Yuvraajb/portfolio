@@ -150,21 +150,14 @@ function xmlEscape(str) {
     .split('"').join('&quot;');
 }
 
-function buildStream(posts) {
-  return posts.map(function (p) {
-    return { type: 'post', date: p.date, title: p.title, url: '/blog/' + p.slug + '/', excerpt: p.excerpt, external: p.external, source: p.source };
-  });
-}
-
 function build() {
   var site = readJson(path.join(CONTENT_DIR, 'site.json'));
-  var bookshelf = readJson(path.join(CONTENT_DIR, 'bookshelf.json'));
   var localPosts = loadMarkdownEntries(path.join(CONTENT_DIR, 'posts'));
   var externalPosts = loadExternalPosts();
   var posts = mergePosts(localPosts, externalPosts);
 
-  var githubActivityPath = path.join(CONTENT_DIR, 'github-activity.json');
-  var githubActivity = fs.existsSync(githubActivityPath) ? readJson(githubActivityPath) : null;
+  var projectsPath = path.join(CONTENT_DIR, 'projects.json');
+  var projects = fs.existsSync(projectsPath) ? readJson(projectsPath) : [];
 
   var aboutRaw = fs.readFileSync(path.join(CONTENT_DIR, 'about.md'), 'utf8');
   var aboutParsed = parseFrontmatter(aboutRaw);
@@ -175,20 +168,15 @@ function build() {
   rimraf(OUT_DIR);
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  var stream = buildStream(posts).slice(0, 3);
-  writeFile('index.html', templates.renderHome(site, stream, bookshelf, githubActivity, bioHtml));
+  writeFile('index.html', templates.renderHome(site, projects, bioHtml));
 
-  writeFile('blog/index.html', templates.renderPostList(site, posts.map(function (p) {
-    return { type: 'post', date: p.date, title: p.title, url: '/blog/' + p.slug + '/', excerpt: p.excerpt, external: p.external, source: p.source };
-  })));
+  writeFile('blog/index.html', templates.renderPostList(site));
   posts.forEach(function (post) {
     writeFile('blog/' + post.slug + '/index.html', templates.renderPost(site, post));
   });
 
-  writeFile('bookshelf/index.html', templates.renderBookshelfPage(site, bookshelf));
-  if (githubActivity) {
-    writeFile('projects/index.html', templates.renderGithubPage(site, githubActivity));
-  }
+  writeFile('bookshelf/index.html', templates.renderBookshelfPage(site));
+  writeFile('projects/index.html', templates.renderProjectsPage(site, projects));
   writeFile('about/index.html', templates.renderAboutPage(site, aboutHtml));
   writeFile('404.html', templates.render404(site));
   writeFile('feed.xml', buildRssFeed(site, posts));
@@ -201,8 +189,8 @@ function build() {
   }
 
   console.log(
-    'Built ' + posts.length + ' post(s) (' + localPosts.length + ' local, ' + externalPosts.length + ' synced), ' +
-    bookshelf.length + ' bookshelf entr(y/ies) -> ' + path.relative(ROOT, OUT_DIR) + '/'
+    'Built ' + posts.length + ' post(s) (' + localPosts.length + ' local, ' + externalPosts.length + ' synced) -> ' +
+    path.relative(ROOT, OUT_DIR) + '/'
   );
 }
 

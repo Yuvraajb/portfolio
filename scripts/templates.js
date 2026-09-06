@@ -2,6 +2,29 @@
 
 var escapeHtml = require('./markdown.js').escapeHtml;
 
+/* No project screenshots/logos exist yet, so the light-mode tile (see
+   style.css) gets a small abstract composition instead of a wordmark --
+   three fixed variants, rotated by index, built from the site's own
+   palette so they read as one system rather than random clip art. */
+var ABSTRACT_ART_VARIANTS = [
+  '<circle cx="40" cy="45" r="30" fill="var(--purple)" opacity="0.85"/>' +
+  '<polygon points="85,20 115,80 55,80" fill="var(--teal)" opacity="0.85"/>' +
+  '<rect x="55" y="60" width="35" height="35" rx="8" fill="var(--pink)" opacity="0.85" transform="rotate(12 72 77)"/>',
+
+  '<ellipse cx="55" cy="60" rx="45" ry="30" fill="var(--pink)" opacity="0.85" transform="rotate(-15 55 60)"/>' +
+  '<circle cx="85" cy="35" r="22" fill="var(--yellow)" opacity="0.9"/>' +
+  '<circle cx="30" cy="85" r="18" fill="var(--purple)" opacity="0.85"/>',
+
+  '<rect x="15" y="20" width="30" height="80" rx="10" fill="var(--teal)" opacity="0.85"/>' +
+  '<rect x="55" y="45" width="30" height="55" rx="10" fill="var(--orange)" opacity="0.85"/>' +
+  '<circle cx="90" cy="30" r="20" fill="var(--green)" opacity="0.9"/>'
+];
+
+function renderAbstractArt(index) {
+  var shapes = ABSTRACT_ART_VARIANTS[index % ABSTRACT_ART_VARIANTS.length];
+  return '<svg class="github-repo-art" viewBox="0 0 120 120" aria-hidden="true">' + shapes + '</svg>';
+}
+
 function fmtDate(iso) {
   var d = new Date(iso + 'T00:00:00Z');
   if (isNaN(d.getTime())) return iso;
@@ -11,18 +34,19 @@ function fmtDate(iso) {
 
 /* Runs synchronously in <head>, before first paint, so there's no
    flash of the wrong theme. Reads a saved preference (or falls back
-   to the OS setting) and stamps it on <html> immediately. Once the
+   to dark, the site's default) and stamps it on <html> immediately. Once the
    Shoelace <sl-switch> (loaded async as a module, see layout() head)
    has upgraded and the DOM is ready, its checked state is synced and
-   its "sl-change" event drives the theme + the circular "reveal"
-   transition. Setting .checked pre-upgrade is safe -- Lit-based
-   elements (which Shoelace is built on) capture instance properties
-   set before upgrade and re-apply them once defined. */
+   its "sl-change" event drives the theme, with a quick opacity fade
+   so the switch doesn't look instantaneous/jarring. Setting .checked
+   pre-upgrade is safe -- Lit-based elements (which Shoelace is built
+   on) capture instance properties set before upgrade and re-apply
+   them once defined. */
 var THEME_BOOTSTRAP_JS = (
   '(function(){' +
   'var root=document.documentElement;' +
   'var saved=null;try{saved=localStorage.getItem("theme");}catch(e){}' +
-  'var initial=saved||((window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark");' +
+  'var initial=saved||"dark";' +
   'root.setAttribute("data-theme",initial);' +
   'function apply(t){' +
   'root.setAttribute("data-theme",t);' +
@@ -32,29 +56,142 @@ var THEME_BOOTSTRAP_JS = (
   'var sw=document.getElementById("theme-toggle");' +
   'if(!sw)return;' +
   'sw.checked=root.getAttribute("data-theme")==="light";' +
-  'var lastX=innerWidth/2,lastY=0;' +
-  'sw.addEventListener("click",function(e){lastX=e.clientX;lastY=e.clientY;});' +
   'sw.addEventListener("sl-change",function(){' +
   'var next=sw.checked?"light":"dark";' +
   'var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;' +
-  'if(document.startViewTransition&&!reduce){' +
-  'var x=lastX,y=lastY;' +
-  'var t=document.startViewTransition(function(){apply(next);});' +
-  't.ready.then(function(){' +
-  'var r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));' +
-  'root.animate({clipPath:["circle(0px at "+x+"px "+y+"px)","circle("+r+"px at "+x+"px "+y+"px)"]},' +
-  '{duration:550,easing:"cubic-bezier(0.65,0,0.35,1)",pseudoElement:"::view-transition-new(root)"});' +
-  '});' +
-  '}else{apply(next);}' +
+  'if(reduce){apply(next);return;}' +
+  'document.body.style.transition="opacity 140ms ease";' +
+  'document.body.style.opacity="0.35";' +
+  'setTimeout(function(){' +
+  'apply(next);' +
+  'requestAnimationFrame(function(){document.body.style.opacity="1";});' +
+  '},140);' +
   '});' +
   '});' +
+  'window.__cachedFetch=function(key,url,render){' +
+  'var cached=null;' +
+  'try{var raw=sessionStorage.getItem(key);if(raw)cached=JSON.parse(raw);}catch(e){}' +
+  'if(cached){render(cached);return;}' +
+  'fetch(url).then(function(r){return r.json();}).then(function(data){' +
+  'if(data&&data.ok){try{sessionStorage.setItem(key,JSON.stringify(data));}catch(e){}}' +
+  'render(data);' +
+  '}).catch(function(){render(null);});' +
+  '};' +
   '})();'
 );
+
+/* Site-wide cursor trail: an ASCII glyph trail in dark mode, a glowing
+   RGB line in light mode -- switches live off document.documentElement's
+   data-theme attribute every frame, no separate listener needed.
+   Reimplemented from scratch as plain canvas code (no React/Framer
+   runtime, which this zero-dependency static site doesn't have) --
+   inspired by two Framer marketplace components (Ascii FlowTrail,
+   RGB string mouse trail) rather than importing them directly, since
+   both are React components built against Framer's own "framer"
+   package and can't run outside Framer's site runtime. Skipped
+   entirely for reduced-motion or coarse (touch) pointers. */
+var CURSOR_TRAIL_JS = (
+  '(function(){' +
+  'if(window.matchMedia&&(matchMedia("(prefers-reduced-motion: reduce)").matches||matchMedia("(pointer: coarse)").matches))return;' +
+  'var canvas=document.createElement("canvas");' +
+  'canvas.style.position="fixed";' +
+  'canvas.style.inset="0";' +
+  'canvas.style.width="100vw";' +
+  'canvas.style.height="100vh";' +
+  'canvas.style.pointerEvents="none";' +
+  'canvas.style.zIndex="9999";' +
+  'document.body.appendChild(canvas);' +
+  'var ctx=canvas.getContext("2d");' +
+  'function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}' +
+  'resize();' +
+  'addEventListener("resize",resize);' +
+  'var mouse={x:innerWidth/2,y:innerHeight/2,active:false};' +
+  'var scribbleMoving=false;' +
+  'var scribbleIdleTimer=null;' +
+  'addEventListener("mousemove",function(e){' +
+  'mouse.x=e.clientX;mouse.y=e.clientY;mouse.active=true;' +
+  'scribbleMoving=true;' +
+  'if(scribbleIdleTimer)clearTimeout(scribbleIdleTimer);' +
+  'scribbleIdleTimer=setTimeout(function(){scribbleMoving=false;},100);' +
+  '});' +
+  'var ramp="@%#*+=-:. ";' +
+  'var asciiTrail=[];' +
+  'var lastAsciiPoint=null;' +
+  'var scribbleTrail=[];' +
+  'function isDark(){return document.documentElement.getAttribute("data-theme")!=="light";}' +
+  'function drawAscii(){' +
+  'if(mouse.active&&(!lastAsciiPoint||Math.hypot(mouse.x-lastAsciiPoint.x,mouse.y-lastAsciiPoint.y)>10)){' +
+  'asciiTrail.push({x:mouse.x,y:mouse.y,age:0});' +
+  'lastAsciiPoint={x:mouse.x,y:mouse.y};' +
+  '}' +
+  'var maxAge=26;' +
+  'ctx.font="13px "+(getComputedStyle(document.body).getPropertyValue("--font-mono")||"monospace");' +
+  'ctx.textAlign="center";' +
+  'ctx.textBaseline="middle";' +
+  'asciiTrail.forEach(function(p){' +
+  'var t=p.age/maxAge;' +
+  'var idx=Math.min(ramp.length-1,Math.floor(t*ramp.length));' +
+  'ctx.fillStyle="rgba(91,157,249,"+(1-t)*0.85+")";' +
+  'ctx.fillText(ramp.charAt(idx),p.x,p.y);' +
+  'p.age++;' +
+  '});' +
+  'asciiTrail=asciiTrail.filter(function(p){return p.age<maxAge;});' +
+  '}' +
+  /* Hand-drawn "scribble" trail -- vanilla port of the physics in
+     https://framer.com/m/ScribbleTrailCursor-PxeYCm.js (spring-follow
+     points with random jitter, drawn as overlapping quadratic curves).
+     Same defaults as that component: 4 points, tension 0.3, friction
+     0.5, jitter 50px, blue stroke. */
+  'var SCRIB_POINTS=4,SCRIB_TENSION=0.3,SCRIB_FRICTION=0.5,SCRIB_JITTER=50;' +
+  'function drawScribble(){' +
+  'if(!scribbleMoving||!mouse.active){scribbleTrail=[];return;}' +
+  'if(scribbleTrail.length===0){' +
+  'for(var i=0;i<SCRIB_POINTS;i++)scribbleTrail.push({x:mouse.x,y:mouse.y,dx:0,dy:0});' +
+  '}' +
+  'var trail=scribbleTrail;' +
+  'trail.forEach(function(p,i){' +
+  'var target=i===0?mouse:trail[i-1];' +
+  'p.dx+=SCRIB_TENSION*(target.x-p.x)+2*Math.random();' +
+  'p.dy+=SCRIB_TENSION*(target.y-p.y)+2*Math.random();' +
+  'p.dx*=SCRIB_FRICTION;p.dy*=SCRIB_FRICTION;' +
+  'p.x+=p.dx;p.y+=p.dy;' +
+  '});' +
+  'ctx.strokeStyle="#3DA8FF";' +
+  'ctx.lineWidth=2;' +
+  'ctx.lineCap="round";' +
+  'ctx.lineJoin="round";' +
+  'ctx.beginPath();' +
+  'ctx.moveTo(trail[0].x+Math.random()*2,trail[0].y+Math.random()*2);' +
+  'for(var i=0;i<trail.length-1;i++){' +
+  'var mx=0.5*(trail[i].x+trail[i+1].x+Math.random()*2);' +
+  'var my=0.5*(trail[i].y+trail[i+1].y+Math.random()*2);' +
+  'ctx.quadraticCurveTo(trail[i].x+Math.random()*SCRIB_JITTER-SCRIB_JITTER/2,trail[i].y+Math.random()*SCRIB_JITTER-SCRIB_JITTER/2,mx,my);' +
+  'ctx.stroke();' +
+  '}' +
+  'ctx.lineTo(trail[trail.length-1].x,trail[trail.length-1].y);' +
+  'ctx.stroke();' +
+  '}' +
+  'function frame(){' +
+  'ctx.clearRect(0,0,canvas.width,canvas.height);' +
+  'if(isDark()){drawAscii();}else{drawScribble();}' +
+  'requestAnimationFrame(frame);' +
+  '}' +
+  'requestAnimationFrame(frame);' +
+  '})();'
+);
+
+/* Shared by every live-embed page script below: checks sessionStorage
+   for a cached API response before hitting the network, and caches a
+   successful response for reuse. Scoped to the browser tab/session --
+   navigating between pages (home <-> bookshelf, say) reuses the same
+   fetch instead of re-hitting Goodreads/Substack on every visit;
+   closing the tab clears it, a plain refresh does not. See
+   window.__cachedFetch in THEME_BOOTSTRAP_JS above. */
 
 function icon(name) {
   var icons = {
     github: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>',
-    twitter: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M16 3.04c-.59.26-1.22.44-1.88.52.68-.41 1.2-1.05 1.44-1.82-.63.38-1.34.65-2.08.8A3.28 3.28 0 0 0 7.86 5.5c0 .26.03.51.08.75-2.73-.14-5.15-1.44-6.77-3.43a3.28 3.28 0 0 0 1.01 4.37c-.53-.02-1.03-.16-1.47-.4v.04c0 1.6 1.14 2.94 2.65 3.24-.28.08-.57.12-.87.12-.21 0-.42-.02-.62-.06.42 1.31 1.64 2.27 3.09 2.29A6.59 6.59 0 0 1 0 13.85 9.3 9.3 0 0 0 5.03 15.4c6.03 0 9.33-5 9.33-9.33 0-.14 0-.28-.01-.42A6.68 6.68 0 0 0 16 3.04Z"/></svg>',
+    linkedin: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M14.82 0H1.18C.53 0 0 .52 0 1.16v13.68C0 15.48.53 16 1.18 16h13.64c.65 0 1.18-.52 1.18-1.16V1.16C16 .52 15.47 0 14.82 0ZM4.75 13.65H2.4V6.14h2.36v7.51ZM3.58 5.1c-.76 0-1.37-.61-1.37-1.37 0-.75.61-1.37 1.37-1.37.75 0 1.37.62 1.37 1.37 0 .76-.62 1.37-1.37 1.37Zm10.07 8.55h-2.35V10c0-.87-.02-1.99-1.21-1.99-1.22 0-1.4.95-1.4 1.93v3.71H6.34V6.14h2.26v1.03h.03c.31-.6 1.09-1.23 2.24-1.23 2.4 0 2.84 1.58 2.84 3.63v4.08Z"/></svg>',
     book: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M2 2.5A1.5 1.5 0 0 1 3.5 1H8v14H3.5A1.5 1.5 0 0 1 2 13.5v-11Zm14 0v11a1.5 1.5 0 0 1-1.5 1.5H9V1h4.5A1.5 1.5 0 0 1 16 2.5Z"/></svg>',
     rss: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M2 2a1 1 0 0 1 1-1c6.075 0 11 4.925 11 11a1 1 0 1 1-2 0A9 9 0 0 0 3 3a1 1 0 0 1-1-1Zm0 5a1 1 0 0 1 1-1 6 6 0 0 1 6 6 1 1 0 1 1-2 0 4 4 0 0 0-4-4 1 1 0 0 1-1-1Zm0 5.5A1.5 1.5 0 1 1 2 15.999 1.5 1.5 0 0 1 2 12.5Z"/></svg>',
     substack: '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M1.5 1h13v2.3h-13V1Zm0 4h13v2.3h-13V5Zm0 4.3h13V15L8 11.2 1.5 15V9.3Z"/></svg>'
@@ -72,7 +209,7 @@ function renderNav(site, activeUrl) {
 
 function renderSocial(site) {
   var items = site.social.map(function (s) {
-    return '<a href="' + s.url + '" class="social-link" title="' + escapeHtml(s.label) + '" rel="me noopener noreferrer">' +
+    return '<a href="' + s.url + '" class="social-link" title="' + escapeHtml(s.label) + '" target="_blank" rel="me noopener noreferrer">' +
       icon(s.icon) + '<span class="visually-hidden">' + escapeHtml(s.label) + '</span></a>';
   }).join('');
   return '<div class="social-links">' + items + '</div>';
@@ -82,13 +219,42 @@ function renderThemeToggle() {
   return '<sl-switch id="theme-toggle" class="theme-toggle" aria-label="Switch color theme"></sl-switch>';
 }
 
+/* Cute peeking-face SVG (blink/look-around loop is pure CSS keyframes,
+   no JS) -- adapted from https://uiverse.io/preet_7613/new-cougar-63,
+   scaled down and recolored. Doubles as the site's home link/logo, in
+   the navbar's top-left where the avatar+name used to sit (that pair
+   now lives as a static, non-interactive block on the homepage --
+   see renderHome). */
+function renderNavFace() {
+  return (
+    '<a href="/" class="nav-face" aria-label="Home">' +
+    '<svg class="nav-face-svg" viewBox="0 0 320 380" aria-hidden="true">' +
+    '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="25">' +
+    '<g class="nav-face__eyes" transform="translate(0,112.5)">' +
+    '<g transform="translate(15,0)">' +
+    '<polyline class="nav-face__eye-lid" points="37,0 0,120 75,120"></polyline>' +
+    '<polyline class="nav-face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>' +
+    '</g>' +
+    '<g transform="translate(230,0)">' +
+    '<polyline class="nav-face__eye-lid" points="37,0 0,120 75,120"></polyline>' +
+    '<polyline class="nav-face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>' +
+    '</g>' +
+    '</g>' +
+    '<rect class="nav-face__nose" x="132.5" y="112.5" width="55" height="155" rx="4" ry="4"></rect>' +
+    '<g transform="translate(65,334)" stroke-dasharray="102 102">' +
+    '<path class="nav-face__mouth-left" d="M 0 30 C 0 30 40 0 95 0"></path>' +
+    '<path class="nav-face__mouth-right" d="M 95 0 C 150 0 190 30 190 30"></path>' +
+    '</g>' +
+    '</g>' +
+    '</svg>' +
+    '</a>'
+  );
+}
+
 function renderHeader(site, activeUrl) {
   return (
-    '<header class="site-header h-card">' +
-    '<a href="/" class="site-brand">' +
-    '<img class="avatar u-photo" src="' + site.avatar + '" alt="' + escapeHtml(site.name) + '" width="56" height="56">' +
-    '<span class="site-title p-name">' + escapeHtml(site.name) + '</span>' +
-    '</a>' +
+    '<header class="site-header">' +
+    renderNavFace() +
     '<div class="site-header-right">' +
     renderNav(site, activeUrl) +
     renderThemeToggle() +
@@ -102,8 +268,7 @@ function renderFooter(site) {
   return (
     '<footer class="site-footer">' +
     renderSocial(site) +
-    '<p class="footer-note">&copy; ' + year + ' ' + escapeHtml(site.name) + '. ' + escapeHtml(site.footerNote) + '</p>' +
-    '<p class="footer-meta"><a href="/feed.xml">RSS feed</a> &middot; <a href="/projects/">Projects</a></p>' +
+    '<p class="footer-note">&copy; ' + year + ' ' + escapeHtml(site.name) + '</p>' +
     '</footer>'
   );
 }
@@ -127,9 +292,12 @@ function layout(opts) {
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">\n' +
     '<link rel="stylesheet" href="/assets/css/style.css">\n' +
     '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2/cdn/themes/light.css">\n' +
-    '<script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2/cdn/shoelace-autoloader.js"></script>\n' +
+    '<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2/cdn/components/switch/switch.js">\n' +
+    '<script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2/cdn/components/switch/switch.js"></script>\n' +
     '<link rel="alternate" type="application/rss+xml" title="' + escapeHtml(site.name) + '" href="/feed.xml">\n' +
-    '<link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">\n' +
+    '<link rel="icon" href="/assets/images/favicon/icons8-obsidian-block-windows-11-color-32.png" sizes="32x32" type="image/png">\n' +
+    '<link rel="icon" href="/assets/images/favicon/icons8-obsidian-block-windows-11-color-16.png" sizes="16x16" type="image/png">\n' +
+    '<link rel="apple-touch-icon" href="/assets/images/favicon/icons8-obsidian-block-windows-11-color-96.png">\n' +
     '<meta name="theme-color" content="#0b0b0c">\n' +
     '<meta property="og:title" content="' + title + '">\n' +
     '<meta property="og:description" content="' + description + '">\n' +
@@ -146,107 +314,217 @@ function layout(opts) {
     '\n</main>\n' +
     renderFooter(site) +
     '</div>\n' +
+    '<script>' + CURSOR_TRAIL_JS + '</script>\n' +
     '</body>\n' +
     '</html>\n'
   );
 }
 
-function renderStreamItem(entry) {
-  var sourceBadge = entry.external ? '<span class="source-badge">via ' + escapeHtml(entry.source) + '</span>' : '';
-  var titleHtml = '<h3 class="stream-title"><a href="' + entry.url + '">' + escapeHtml(entry.title) + '</a></h3>' +
-    (entry.excerpt ? '<p class="stream-excerpt">' + escapeHtml(entry.excerpt) + '</p>' : '');
+/* Fetches the Goodreads shelves client-side, live, on every page load --
+   same pattern as renderSubstackEmbed below: a same-origin API route
+   (api/bookshelf.js in production, the matching handler in
+   scripts/server.js for local dev) proxies Goodreads server-side. */
+function renderBookshelfWidget() {
   return (
-    '<article class="stream-item stream-item--post">' +
-    '<div class="stream-meta"><span class="stream-kind">Post</span> ' +
-    '<time datetime="' + entry.date + '">' + fmtDate(entry.date) + '</time>' + sourceBadge + '</div>' +
-    titleHtml +
-    '</article>'
-  );
-}
-
-var COVER_SHADOW_COLORS = ['purple', 'pink', 'teal', 'orange', 'yellow', 'green'];
-
-function renderBookshelfWidget(bookshelf, limit) {
-  var reading = bookshelf.filter(function (b) { return b.status === 'currently-reading'; });
-  var list = (reading.length ? reading : bookshelf).slice(0, limit || 4);
-  var items = list.map(function (b) {
-    return (
-      '<li class="bookshelf-item">' +
-      '<img class="bookshelf-cover" src="' + b.cover + '" alt="Cover of ' + escapeHtml(b.title) + '" width="44" height="66" loading="lazy">' +
-      '<span class="bookshelf-info"><strong>' + escapeHtml(b.title) + '</strong><span class="bookshelf-author">' + escapeHtml(b.author) + '</span></span>' +
-      '</li>'
-    );
-  }).join('');
-  return (
-    '<aside class="widget bookshelf-widget">' +
+    '<aside class="widget bookshelf-widget" id="bookshelf-widget">' +
     '<h2 class="widget-title"><a href="/bookshelf/">Bookshelf</a></h2>' +
-    '<ul class="bookshelf-list">' + items + '</ul>' +
+    '<ul class="bookshelf-list" id="bookshelf-widget-list"><li class="feed-status">Loading&hellip;</li></ul>' +
     '<p class="widget-footer"><a href="/bookshelf/">See the full shelf &rarr;</a></p>' +
-    '</aside>'
+    '</aside>' +
+    '<script>(function(){' +
+    'function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
+    'var list=document.getElementById("bookshelf-widget-list");' +
+    'if(!list)return;' +
+    'window.__cachedFetch("bookshelf-cache","/api/bookshelf",function(data){' +
+    'if(!data||!data.ok||!data.books||!data.books.length){list.innerHTML="<li class=\\"feed-status\\">Couldn’t load the shelf right now.</li>";return;}' +
+    'var reading=data.books.filter(function(b){return b.status==="currently-reading";});' +
+    'var picks=(reading.length?reading:data.books).slice(0,4);' +
+    'list.innerHTML=picks.map(function(b){' +
+    'return "<li class=\\"bookshelf-item\\"><img class=\\"bookshelf-cover\\" src=\\""+esc(b.cover)+"\\" alt=\\"Cover of "+esc(b.title)+"\\" width=\\"44\\" height=\\"66\\" loading=\\"lazy\\"><span class=\\"bookshelf-info\\"><strong>"+esc(b.title)+"</strong><span class=\\"bookshelf-author\\">"+esc(b.author)+"</span></span></li>";' +
+    '}).join("");' +
+    '});' +
+    '})();</script>'
   );
 }
 
-function renderGithubRepoItem(repo, compact, featured) {
-  var meta = [];
-  if (repo.language) meta.push(repo.language);
-  meta.push(repo.action + ' ' + fmtDate(repo.pushedAt));
+/* Curated highlights, not a live GitHub sync -- see content/projects.json.
+   Kept the github-repo-* class names since dark mode's list styling
+   still applies unchanged; only light mode gets a new card-grid look
+   (see html[data-theme="light"] .github-repo-list--page in style.css). */
+function parseGithubRepo(url) {
+  var m = String(url || '').match(/^https?:\/\/github\.com\/([^\/]+)\/([^\/?#]+)/);
+  return m ? m[1] + '/' + m[2] : '';
+}
+
+function renderProjectItem(project, compact, featured, index) {
   var classes = 'github-repo' + (featured ? ' github-repo--featured' : '');
+  var preview = project.image
+    ? '<img class="github-repo-preview" src="' + escapeHtml(project.image) + '" alt="" loading="lazy">'
+    : '';
   return (
     '<li class="' + classes + '">' +
-    '<a class="github-repo-name" href="' + repo.url + '" rel="noopener noreferrer">' + escapeHtml(repo.name) + '</a>' +
-    (!compact && repo.description ? '<p class="github-repo-desc">' + escapeHtml(repo.description) + '</p>' : '') +
-    '<div class="github-repo-meta">' + meta.map(escapeHtml).join(' &middot; ') + '</div>' +
+    '<a class="github-repo-name" href="' + escapeHtml(project.url) + '" target="_blank" rel="noopener noreferrer" ' +
+    'data-name="' + escapeHtml(project.name) + '" ' +
+    'data-description="' + escapeHtml(project.description || '') + '" ' +
+    'data-tag="' + escapeHtml(project.tag || '') + '" ' +
+    'data-url="' + escapeHtml(project.url) + '" ' +
+    'data-repo="' + escapeHtml(project.private ? '' : parseGithubRepo(project.url)) + '">' +
+    '<span class="github-repo-tile">' + renderAbstractArt(index || 0) + preview + '</span>' +
+    '<span class="github-repo-label">' + escapeHtml(project.name) + '</span>' +
+    '</a>' +
+    (!compact && project.description ? '<p class="github-repo-desc">' + escapeHtml(project.description) + '</p>' : '') +
+    (project.tag ? '<div class="github-repo-meta">' + escapeHtml(project.tag) + '</div>' : '') +
     '</li>'
   );
 }
 
-function renderGithubWidget(githubActivity) {
-  if (!githubActivity || !githubActivity.repos || !githubActivity.repos.length) return '';
-  var items = githubActivity.repos.slice(0, 4).map(function (r) { return renderGithubRepoItem(r, true); }).join('');
+function renderProjectsWidget(projects) {
+  if (!projects || !projects.length) return '';
+  var items = projects.slice(0, 4).map(function (p, i) { return renderProjectItem(p, true, false, i); }).join('');
   return (
     '<aside class="widget github-widget">' +
     '<h2 class="widget-title"><a href="/projects/">Projects</a></h2>' +
     '<ul class="github-repo-list">' + items + '</ul>' +
-    '<p class="widget-footer"><a href="/projects/">See all activity &rarr;</a></p>' +
+    '<p class="widget-footer"><a href="/projects/">See all &rarr;</a></p>' +
     '</aside>'
   );
 }
 
-function renderGithubPage(site, githubActivity) {
-  var items = githubActivity.repos.map(function (r, i) { return renderGithubRepoItem(r, false, i === 0); }).join('');
+/* Clicking a project name opens this in-page modal instead of
+   navigating away -- description + tag come straight from the
+   data-* attributes rendered by renderProjectItem; language/stars/
+   last-updated are enriched from GitHub's public REST API (CORS-
+   enabled for unauthenticated reads, no server proxy needed), skipped
+   entirely for the private repo (no data-repo attribute rendered). */
+function renderProjectModal() {
+  return (
+    '<div class="project-modal" id="project-modal" hidden>' +
+    '<div class="project-modal-backdrop" id="project-modal-backdrop"></div>' +
+    '<div class="project-modal-panel" role="dialog" aria-modal="true" aria-labelledby="project-modal-title">' +
+    '<button type="button" class="project-modal-close" id="project-modal-close" aria-label="Close">&times;</button>' +
+    '<h2 id="project-modal-title"></h2>' +
+    '<p class="project-modal-tag" id="project-modal-tag"></p>' +
+    '<p class="project-modal-desc" id="project-modal-desc"></p>' +
+    '<p class="project-modal-meta" id="project-modal-meta"></p>' +
+    '<a class="view-all-btn" id="project-modal-github" target="_blank" rel="noopener noreferrer">View on GitHub &rarr;</a>' +
+    '</div>' +
+    '</div>' +
+    '<script>(function(){' +
+    'var modal=document.getElementById("project-modal");' +
+    'if(!modal)return;' +
+    'var backdrop=document.getElementById("project-modal-backdrop");' +
+    'var closeBtn=document.getElementById("project-modal-close");' +
+    'var title=document.getElementById("project-modal-title");' +
+    'var tagEl=document.getElementById("project-modal-tag");' +
+    'var descEl=document.getElementById("project-modal-desc");' +
+    'var metaEl=document.getElementById("project-modal-meta");' +
+    'var githubBtn=document.getElementById("project-modal-github");' +
+    'var repoCache={};' +
+    'function renderMeta(data){' +
+    'var parts=[];' +
+    'if(data.language)parts.push(data.language);' +
+    'if(typeof data.stargazers_count==="number")parts.push(data.stargazers_count+" \\u2605");' +
+    'if(data.pushed_at){var d=new Date(data.pushed_at);parts.push("Updated "+d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"}));}' +
+    'metaEl.textContent=parts.join(" \\u00b7 ");' +
+    '}' +
+    'function openModal(a){' +
+    'title.textContent=a.dataset.name;' +
+    'tagEl.textContent=a.dataset.tag||"";' +
+    'tagEl.hidden=!a.dataset.tag;' +
+    'descEl.textContent=a.dataset.description||"";' +
+    'metaEl.textContent="";' +
+    'githubBtn.href=a.dataset.url;' +
+    'modal.hidden=false;' +
+    'document.body.style.overflow="hidden";' +
+    'var repo=a.dataset.repo;' +
+    'if(!repo)return;' +
+    'if(repoCache[repo]){renderMeta(repoCache[repo]);return;}' +
+    'fetch("https://api.github.com/repos/"+repo).then(function(r){return r.ok?r.json():null;}).then(function(data){' +
+    'if(!data)return;' +
+    'repoCache[repo]=data;' +
+    'renderMeta(data);' +
+    '}).catch(function(){});' +
+    '}' +
+    'function closeModal(){modal.hidden=true;document.body.style.overflow="";}' +
+    'document.querySelectorAll(".github-repo-list--page .github-repo-name").forEach(function(a){' +
+    'a.addEventListener("click",function(e){e.preventDefault();openModal(a);});' +
+    '});' +
+    'backdrop.addEventListener("click",closeModal);' +
+    'closeBtn.addEventListener("click",closeModal);' +
+    'document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!modal.hidden)closeModal();});' +
+    '})();</script>'
+  );
+}
+
+function renderProjectsPage(site, projects) {
+  var items = (projects || []).map(function (p, i) { return renderProjectItem(p, false, i === 0, i); }).join('');
   var content = (
     '<h1 class="page-title">Projects</h1>' +
-    '<p class="page-lede">' +
-    'Recently pushed public repos, synced from <a href="' + githubActivity.profileUrl + '" rel="noopener noreferrer">github.com/' + escapeHtml(githubActivity.username) + '</a> — ' +
-    escapeHtml(String(githubActivity.publicRepos)) + ' public repos, ' + escapeHtml(String(githubActivity.followers)) + ' followers. ' +
-    'Last synced ' + fmtDate(githubActivity.updatedAt) + '.' +
-    '</p>' +
+    '<p class="page-lede">A few things I’m proud of.</p>' +
     '<ul class="github-repo-list github-repo-list--page">' + items + '</ul>' +
-    '<p class="view-all-wrap"><a class="view-all-btn" href="https://github.com/Yuvraajb?tab=repositories" rel="noopener noreferrer">View all repos &rarr;</a></p>'
+    '<p class="view-all-wrap"><a class="view-all-btn" href="https://github.com/Yuvraajb" target="_blank" rel="noopener noreferrer">See more on GitHub &rarr;</a></p>' +
+    renderProjectModal()
   );
   return layout({ site: site, title: 'Projects', activeUrl: '/projects/', content: content, bodyClass: 'page-projects' });
 }
 
-function renderHome(site, streamEntries, bookshelf, githubActivity, bioHtml) {
-  var stream = streamEntries.map(renderStreamItem).join('\n');
+function renderHome(site, projects, bioHtml) {
   var content = (
+    '<div class="home-identity h-card">' +
+    '<img class="home-identity-avatar u-photo" src="' + site.avatar + '" alt="" width="56" height="56">' +
+    '<span class="home-identity-name p-name">' + escapeHtml(site.name) + '</span>' +
+    '</div>' +
     '<section class="intro p-note">' +
     bioHtml +
     '</section>' +
     '<div class="home-grid">' +
-    '<section class="stream">' + stream + '</section>' +
+    '<div>' + renderSubstackEmbed(site) + '</div>' +
     '<div class="sidebar">' +
-    renderGithubWidget(githubActivity) +
-    renderBookshelfWidget(bookshelf, 4) +
+    renderProjectsWidget(projects) +
+    renderBookshelfWidget() +
     '</div>' +
     '</div>'
   );
   return layout({ site: site, title: '', description: site.bioShort, activeUrl: '', content: content, bodyClass: 'page-home' });
 }
 
-function renderPostList(site, posts) {
-  var items = posts.map(renderStreamItem).join('\n');
-  var content = '<h1 class="page-title">Blog</h1><p class="page-lede">Long-form posts. Also available as an <a href="/feed.xml">RSS feed</a>.</p><section class="stream">' + items + '</section>';
+/* Fetches the Substack feed client-side, live, on every page load --
+   no manual sync step and no rebuild needed for a new post to show up.
+   The browser can't hit Substack's feed directly (no CORS headers on
+   their end), so this calls a same-origin API route that proxies it
+   server-side: api/substack-feed.js in production, and the matching
+   handler in scripts/server.js for local dev. */
+function renderSubstackEmbed(site) {
+  var feedUrl = site.externalBlog && site.externalBlog.feedUrl;
+  if (!feedUrl) return '';
+  var provider = escapeHtml((site.externalBlog && site.externalBlog.provider) || 'Substack');
+  return (
+    '<section class="substack-embed" id="substack-embed">' +
+    '<div class="stream" id="substack-embed-list"><p class="feed-status" id="substack-embed-status">Loading latest posts&hellip;</p></div>' +
+    '</section>' +
+    '<script>(function(){' +
+    'function esc(s){return String(s).replace(/[&<>"\']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","\'":"&#39;"}[c];});}' +
+    'var list=document.getElementById("substack-embed-list");' +
+    'var status=document.getElementById("substack-embed-status");' +
+    'if(!list)return;' +
+    'window.__cachedFetch("substack-cache","/api/substack-feed",function(data){' +
+    'if(!data||!data.ok){status.textContent="Couldn\\u2019t load posts right now \\u2014 view them directly on ' + provider + ' \\u2197";return;}' +
+    'if(!data.posts||!data.posts.length){status.textContent="No posts yet \\u2014 check back soon.";return;}' +
+    'list.innerHTML=data.posts.map(function(p){' +
+    'var date=p.date?new Date(p.date+"T00:00:00Z").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric",timeZone:"UTC"}):"";' +
+    'return "<article class=\\"stream-item stream-item--post\\"><div class=\\"stream-meta\\"><span class=\\"stream-kind\\">Post</span> "+' +
+    '(date?"<time>"+esc(date)+"</time>":"")+' +
+    '"</div>' +
+    '<h3 class=\\"stream-title\\"><a href=\\""+esc(p.link)+"\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\">"+esc(p.title)+"</a></h3>' +
+    '<p class=\\"stream-excerpt\\">"+esc(p.excerpt)+"</p></article>";' +
+    '}).join("");' +
+    '});' +
+    '})();</script>'
+  );
+}
+
+function renderPostList(site) {
+  var content = '<h1 class="page-title">Blog</h1><p class="page-lede">Long-form posts. Also available as an <a href="/feed.xml">RSS feed</a>.</p>' + renderSubstackEmbed(site);
   return layout({ site: site, title: 'Blog', activeUrl: '/blog/', content: content, bodyClass: 'page-blog' });
 }
 
@@ -276,41 +554,105 @@ function renderPost(site, post) {
   });
 }
 
-function renderBookshelfPage(site, bookshelf) {
-  var groups = [
-    { key: 'currently-reading', label: 'Currently Reading' },
-    { key: 'read', label: 'Finished' },
-    { key: 'want-to-read', label: 'Want to Read' }
-  ];
-  var sections = groups.map(function (g) {
-    var books = bookshelf.filter(function (b) { return b.status === g.key; });
-    if (!books.length) return '';
-    var items = books.map(function (b, i) {
-      var stars = b.rating ? '<span class="stars" aria-label="' + b.rating + ' out of 5 stars">' + '★'.repeat(b.rating) + '☆'.repeat(5 - b.rating) + '</span>' : '';
-      var color = COVER_SHADOW_COLORS[i % COVER_SHADOW_COLORS.length];
-      return (
-        '<li class="cover-card cover-card--' + color + '">' +
-        '<a href="' + (b.link || '#') + '" rel="noopener noreferrer">' +
-        '<img class="cover-img" src="' + b.cover + '" alt="Cover of ' + escapeHtml(b.title) + '" width="140" height="210" loading="lazy">' +
-        '</a>' +
-        '<div class="cover-caption">' +
-        '<strong>' + escapeHtml(b.title) + '</strong>' +
-        '<span class="bookshelf-author">' + escapeHtml(b.author) + '</span>' +
-        (stars ? stars : '') +
-        (b.dateFinished ? '<span class="bookshelf-date">Finished ' + fmtDate(b.dateFinished) + '</span>' : '') +
-        '</div>' +
-        '</li>'
-      );
-    }).join('');
-    return '<h2 class="shelf-heading">' + g.label + '</h2><ul class="cover-grid">' + items + '</ul>';
-  }).join('\n');
-
+/* Same live-embed pattern as renderSubstackEmbed/renderBookshelfWidget --
+   fetches api/bookshelf.js client-side and builds the grouped cover
+   grid in the browser, so a newly-shelved book shows up on next load
+   with no rebuild. */
+function renderBookshelfPage(site) {
   var content = (
     '<h1 class="page-title">Bookshelf</h1>' +
     '<p class="page-lede">What I’m reading, have read, and want to get to.</p>' +
-    sections
+    '<div id="bookshelf-page"><p class="feed-status" id="bookshelf-page-status">Loading your shelves&hellip;</p></div>' +
+    '<script>(function(){' +
+    'function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
+    'var root=document.getElementById("bookshelf-page");' +
+    'var status=document.getElementById("bookshelf-page-status");' +
+    'if(!root)return;' +
+    'var COLORS=["purple","pink","teal","orange","yellow","green"];' +
+    'var GROUPS=[["currently-reading","Currently Reading"],["read","Finished"],["want-to-read","Want to Read"]];' +
+    'window.__cachedFetch("bookshelf-cache","/api/bookshelf",function(data){' +
+    'if(!data||!data.ok||!data.books||!data.books.length){status.textContent="Couldn’t load your shelves right now \\u2014 view them directly on Goodreads \\u2197";return;}' +
+    'var html=GROUPS.map(function(g){' +
+    'var key=g[0],label=g[1];' +
+    'var books=data.books.filter(function(b){return b.status===key;});' +
+    'if(!books.length)return "";' +
+    'var items=books.map(function(b,i){' +
+    'var color=COLORS[i%COLORS.length];' +
+    'var stars=b.rating?("<span class=\\"stars\\" aria-label=\\""+b.rating+" out of 5 stars\\">"+"\\u2605".repeat(b.rating)+"\\u2606".repeat(5-b.rating)+"</span>"):"";' +
+    'var finishedDate=b.dateFinished?new Date(b.dateFinished+"T00:00:00Z").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric",timeZone:"UTC"}):"";' +
+    'var finished=finishedDate?("<span class=\\"bookshelf-date\\">Finished "+esc(finishedDate)+"</span>"):"";' +
+    'return "<li class=\\"cover-card cover-card--"+color+"\\"><a href=\\""+esc(b.link||"#")+"\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\"><img class=\\"cover-img\\" src=\\""+esc(b.cover)+"\\" alt=\\"Cover of "+esc(b.title)+"\\" width=\\"140\\" height=\\"210\\" loading=\\"lazy\\"></a><div class=\\"cover-caption\\"><strong>"+esc(b.title)+"</strong><span class=\\"bookshelf-author\\">"+esc(b.author)+"</span>"+stars+finished+"</div></li>";' +
+    '}).join("");' +
+    'return "<h2 class=\\"shelf-heading\\">"+label+"</h2><ul class=\\"cover-grid\\">"+items+"</ul>";' +
+    '}).join("");' +
+    'root.innerHTML=html;' +
+    '});' +
+    '})();</script>'
   );
   return layout({ site: site, title: 'Bookshelf', activeUrl: '/bookshelf/', content: content, bodyClass: 'page-bookshelf' });
+}
+
+/* A real (tiny) command interpreter, not just terminal chrome: typing
+   the prompt in on load, then a live input a visitor can actually type
+   into. Progressive enhancement -- the prompt line and about content
+   above are plain server-rendered text/HTML, fully readable with JS
+   off; this only adds a typing animation and an extra interactive
+   layer below it. */
+function renderInteractiveTerminal(site) {
+  var handle = escapeHtml((site.shortName || site.name).toLowerCase().replace(/\s+/g, ''));
+  return (
+    '<div id="terminal-log" class="terminal-log" aria-live="polite"></div>' +
+    '<div class="terminal-input-line">' +
+    '<span class="terminal-prompt">' + handle + '@site:~$</span>' +
+    '<input id="terminal-cmd-input" class="terminal-cmd-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal command input">' +
+    '</div>' +
+    '<script>(function(){' +
+    'var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;' +
+    'var pathEl=document.querySelector(".terminal-path");' +
+    'if(pathEl&&!reduce){' +
+    'var full=pathEl.textContent;' +
+    'pathEl.textContent="";' +
+    'var i=0;' +
+    'var iv=setInterval(function(){pathEl.textContent+=full.charAt(i);i++;if(i>=full.length)clearInterval(iv);},28);' +
+    '}' +
+    'var input=document.getElementById("terminal-cmd-input");' +
+    'var log=document.getElementById("terminal-log");' +
+    'var body=document.querySelector(".terminal-body");' +
+    'if(!input||!log)return;' +
+    'var promptText="' + handle + '@site:~$";' +
+    'var HELP="Commands: help, whoami, about, ls, projects, blog, bookshelf, contact, date, clear";' +
+    'function println(text){var p=document.createElement("div");p.textContent=text;log.appendChild(p);}' +
+    'function printCmd(cmd){' +
+    'var p=document.createElement("div");p.className="terminal-log-cmd";' +
+    'var s=document.createElement("span");s.className="terminal-prompt";s.textContent=promptText;' +
+    'p.appendChild(s);p.appendChild(document.createTextNode(" "+cmd));log.appendChild(p);' +
+    '}' +
+    'function run(raw){' +
+    'var cmd=raw.trim();' +
+    'if(!cmd)return;' +
+    'printCmd(cmd);' +
+    'var parts=cmd.toLowerCase().split(/\\s+/);' +
+    'var base=parts[0];' +
+    'if(base==="help"){println(HELP);}' +
+    'else if(base==="whoami"){println("' + (site.bioShort || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '");}' +
+    'else if(base==="about"){println("You\\u2019re already here. Scroll up \\u2191");}' +
+    'else if(base==="ls"){println("blog/  bookshelf/  projects/  about/");}' +
+    'else if(base==="date"){println(new Date().toString());}' +
+    'else if(base==="clear"){log.innerHTML="";return;}' +
+    'else if(base==="contact"||base==="email"){println("Find me via the links in the footer \\u2014 LinkedIn, GitHub, Substack.");}' +
+    'else if(base==="sudo"){println("Nice try. Permission denied.");}' +
+    'else if(base==="echo"){println(cmd.slice(5));}' +
+    'else if(base==="projects"||base==="blog"||base==="bookshelf"){' +
+    'println("Opening /"+base+"/ \\u2026");' +
+    'setTimeout(function(){location.href="/"+base+"/";},350);' +
+    '}' +
+    'else{println(base+": command not found. Type \'help\' for a list.");}' +
+    'log.scrollTop=log.scrollHeight;' +
+    '}' +
+    'input.addEventListener("keydown",function(e){if(e.key==="Enter"){run(input.value);input.value="";}});' +
+    'if(body)body.addEventListener("click",function(){input.focus();});' +
+    '})();</script>'
+  );
 }
 
 function renderAboutPage(site, bodyHtml) {
@@ -326,6 +668,7 @@ function renderAboutPage(site, bodyHtml) {
     '<div class="terminal-body">' +
     '<h1 class="terminal-h1">About<span class="terminal-cursor" aria-hidden="true"></span></h1>' +
     '<div class="page-body">' + bodyHtml + '</div>' +
+    renderInteractiveTerminal(site) +
     '</div>' +
     '</div>'
   );
@@ -343,7 +686,7 @@ module.exports = {
   renderPostList: renderPostList,
   renderPost: renderPost,
   renderBookshelfPage: renderBookshelfPage,
-  renderGithubPage: renderGithubPage,
+  renderProjectsPage: renderProjectsPage,
   renderAboutPage: renderAboutPage,
   render404: render404,
   fmtDate: fmtDate

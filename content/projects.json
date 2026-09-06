@@ -1,0 +1,21 @@
+[
+  {
+    "name": "Hackmarket",
+    "url": "https://github.com/Yuvraajb/aicHack",
+    "description": "A two-sided marketplace where sellers upload AI/API tools and buyers call them through a managed gateway — auth, routing, usage tracking, billing, demos, and seller analytics all handled by the platform.",
+    "tag": "Adobe x SCU AIC Hackathon",
+    "private": true
+  },
+  {
+    "name": "Artemis II",
+    "url": "https://github.com/Yuvraajb/artemis2",
+    "description": "Selected as one of 350 winners of Apple's Swift Student Challenge 2026 — flew out to Apple Park for three days to attend WWDC '26.",
+    "tag": "Swift Student Challenge"
+  },
+  {
+    "name": "H4H 2026",
+    "url": "https://github.com/Yuvraajb/H4H-2026",
+    "description": "In it to win it — and we did. 1st place at H4H 2026.",
+    "tag": "1st Place"
+  }
+]

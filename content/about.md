@@ -5,6 +5,6 @@ This site is where the writing about that stuff lives, along with a synced [Proj
 ## Elsewhere
 
 - [GitHub](https://github.com/Yuvraajb)
-- [Substack](https://substack.com/@yuvraajb)
-- [Twitter](https://twitter.com/bhatteryuvraaj)
+- [Substack](https://substack.com/@yuvraajb/posts)
+- [LinkedIn](https://www.linkedin.com/in/yuvraajbhatter/)
 - [Goodreads](https://www.goodreads.com/user/show/165341026-yuvraaj-bhatter)
