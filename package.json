@@ -8,7 +8,8 @@
     "dev": "npm run build && node scripts/server.js",
     "serve": "node scripts/server.js",
     "sync-goodreads": "node scripts/sync-goodreads.js",
-    "sync-blog": "node scripts/sync-blog.js"
+    "sync-blog": "node scripts/sync-blog.js",
+    "sync-letterboxd": "node scripts/sync-letterboxd.js"
   },
   "engines": {
     "node": ">=18"

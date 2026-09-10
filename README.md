@@ -31,18 +31,20 @@ content/
   blog-feed.json        Posts synced from an RSS feed (generated -- see below)
   bookshelf.json        What you're reading / have read / want to read
   github-activity.json  Recently-pushed public repos (generated -- see below)
+  letterboxd.json        Journal + watchlist for the hidden /reel/ page (generated -- see below)
   about.md              The "About" page (rendered as a terminal window)
 assets/
   css/style.css     All the visual design lives in this one file
   images/           Avatar, favicon
 scripts/
-  build.js          Reads content/, writes public/
-  server.js         Zero-dependency static file server for local preview
-  markdown.js       The ~150-line markdown-to-HTML converter
-  frontmatter.js    Parses the `--- key: value ---` header on .md files
-  sync-goodreads.js Pulls your public Goodreads shelves into bookshelf.json
-  sync-blog.js      Pulls posts from any RSS/Atom feed into blog-feed.json
-  sync-github.js    Pulls recent public repo activity into github-activity.json
+  build.js            Reads content/, writes public/
+  server.js           Zero-dependency static file server for local preview
+  markdown.js         The ~150-line markdown-to-HTML converter
+  frontmatter.js      Parses the `--- key: value ---` header on .md files
+  sync-goodreads.js   Pulls your public Goodreads shelves into bookshelf.json
+  sync-blog.js        Pulls posts from any RSS/Atom feed into blog-feed.json
+  sync-github.js      Pulls recent public repo activity into github-activity.json
+  sync-letterboxd.js  Pulls your public Letterboxd diary + watchlist into letterboxd.json
 ```
 
 ## Updating content
@@ -303,6 +305,73 @@ unaffected.
 `content/bookshelf.json`. It's simpler, more reliable, and honestly what I'd
 recommend unless you really want the automation.
 
+## The Reel: a hidden Letterboxd page
+
+**Status for this site:** `content/letterboxd.json` is wired up for
+Letterboxd username `yuvraajzz`, but the sync below hasn't actually run yet
+— same story as the Goodreads sync above, the environment this was set up
+from couldn't reach letterboxd.com. The file currently holds empty
+`journal` and `watchlist` arrays (see its `note` field) rather than
+invented movies. Run the sync from a normal machine to populate it for
+real.
+
+There's a page at `/reel/` — a film diary ("Journal") and watchlist, styled
+to match whichever theme (dark or light) is active — that isn't linked from
+the nav, the footer, or anywhere else in the UI. The only way to it is an
+easter egg: enter the Konami code (`↑ ↑ ↓ ↓ ← → ← → B A`) anywhere on the
+site and the page does an iris-wipe transition to `/reel/`. It also carries
+a `noindex` meta tag so search engines won't surface it. The only on-page
+hint is a one-line message logged to the browser console.
+
+`content/letterboxd.json` looks like:
+
+```json
+{
+  "username": "yuvraajzz",
+  "profileUrl": "https://letterboxd.com/yuvraajzz/",
+  "updatedAt": "2026-09-10",
+  "journal": [
+    {
+      "title": "Film Title",
+      "year": "2023",
+      "link": "https://letterboxd.com/yuvraajzz/film/film-title/",
+      "watchedDate": "2026-09-05",
+      "rating": 4.5,
+      "rewatch": false,
+      "poster": "https://a.ltrbxd.com/resized/....jpg",
+      "review": "First couple hundred characters of the logged review, if any."
+    }
+  ],
+  "watchlist": [
+    { "title": "Another Film", "year": "2019", "link": "...", "poster": "..." }
+  ]
+}
+```
+
+To pull the real thing:
+
+```
+node scripts/sync-letterboxd.js yuvraajzz
+npm run build
+```
+
+(or `LETTERBOXD_USERNAME=yuvraajzz node scripts/sync-letterboxd.js`). It
+scrapes the two public RSS feeds every Letterboxd profile exposes —
+`/username/rss/` for the diary and `/username/watchlist/rss/` for the
+watchlist — no API key needed, same RSS-scraping approach as the Goodreads
+sync above. Your profile needs to be public (Settings → Privacy) for these
+to return data. Capped at the 12 most recent journal entries and 18 most
+recent watchlist entries; adjust `JOURNAL_LIMIT`/`WATCHLIST_LIMIT` in
+`scripts/sync-letterboxd.js` if you want more or fewer. Ratings render as
+★ (and a trailing ½ for half-stars, e.g. `★★★½`), matching Letterboxd's
+0.5–5.0 scale.
+
+**If `/reel/` should disappear entirely:** delete
+`content/letterboxd.json` — `build.js` checks whether it exists and skips
+the page if it's missing, same conditional pattern used for
+`content/projects.json`. The Konami-code listener stays wired up either
+way; it would just 404.
+
 ## Hosting / deployment
 
 Four GitHub Actions workflows live at the **repo root** (not inside this
@@ -380,6 +449,9 @@ that's waiting on your real information: your email, social handles,
 location, "Now" page details, the About page bio paragraph, and
 `site.json`'s `externalBlog` block (feed URL, for reference only — the
 actual sync is configured via the `BLOG_FEED_URL` GitHub Actions variable
-or a CLI argument, not this file). The blog posts and bookshelf use real
-content (grounded in the Synapse project already in this repo) rather than
-lorem ipsum, but you'll still want to make it fully your own.
+or a CLI argument, not this file). `content/letterboxd.json` is in the same
+boat — empty `journal`/`watchlist` arrays until `sync-letterboxd.js` runs
+somewhere with real internet access (see "The Reel" section above). The
+blog posts and bookshelf use real content (grounded in the Synapse project
+already in this repo) rather than lorem ipsum, but you'll still want to
+make it fully your own.

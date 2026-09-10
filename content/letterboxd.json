@@ -1,0 +1,8 @@
+{
+  "username": "yuvraajzz",
+  "profileUrl": "https://letterboxd.com/yuvraajzz/",
+  "updatedAt": null,
+  "note": "PLACEHOLDER -- not yet synced. This environment couldn't reach letterboxd.com to run the real sync (same network restriction noted elsewhere in this repo for Goodreads). Run `npm run sync-letterboxd` from a machine with normal internet access, or wire up a scheduled sync, to pull the real journal and watchlist. Left both lists empty rather than filling them with invented films.",
+  "journal": [],
+  "watchlist": []
+}

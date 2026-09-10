@@ -180,6 +180,44 @@ var CURSOR_TRAIL_JS = (
   '})();'
 );
 
+/* A small easter egg: the Konami code, entered anywhere on the site,
+   iris-wipes to a hidden page (/reel/, not linked from nav or footer)
+   with a Letterboxd journal + watchlist. The wipe is a plain CSS
+   clip-path transition on a fixed overlay -- no experimental
+   cross-document View Transitions API needed, and it doubles as a
+   nod to an actual film transition (an iris wipe) given the subject.
+   z-index is set above CURSOR_TRAIL_JS's canvas (also 9999, appended
+   later in the DOM) so the wipe isn't drawn over mid-transition.
+   Logged to the console as the only hint, for anyone poking around
+   devtools. */
+var EASTER_EGG_JS = (
+  '(function(){' +
+  'var seq=["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];' +
+  'var pos=0;' +
+  'console.log("%cThere\'s a hidden reel of what I\'ve been watching somewhere on this site. You know the code.","color:#5b9df9;font-family:monospace;font-size:12px;");' +
+  'document.addEventListener("keydown",function(e){' +
+  'var key=e.key.length===1?e.key.toLowerCase():e.key;' +
+  'if(key===seq[pos]){' +
+  'pos++;' +
+  'if(pos===seq.length){' +
+  'pos=0;' +
+  'var overlay=document.getElementById("egg-wipe");' +
+  'var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;' +
+  'if(overlay&&!reduce){' +
+  'var r=Math.hypot(innerWidth,innerHeight);' +
+  'overlay.style.clipPath="circle("+r+"px at 50% 50%)";' +
+  'setTimeout(function(){location.href="/reel/";},550);' +
+  '}else{' +
+  'location.href="/reel/";' +
+  '}' +
+  '}' +
+  '}else{' +
+  'pos=(key===seq[0])?1:0;' +
+  '}' +
+  '});' +
+  '})();'
+);
+
 /* Shared by every live-embed page script below: checks sessionStorage
    for a cached API response before hitting the network, and caches a
    successful response for reuse. Scoped to the browser tab/session --
@@ -278,6 +316,7 @@ function layout(opts) {
   var title = opts.title ? escapeHtml(opts.title) + ' — ' + escapeHtml(site.name) : escapeHtml(site.name);
   var description = escapeHtml(opts.description || site.bioShort);
   var canonicalTag = opts.canonicalUrl ? '<link rel="canonical" href="' + escapeHtml(opts.canonicalUrl) + '">\n' : '';
+  var robotsTag = opts.robotsNoindex ? '<meta name="robots" content="noindex, nofollow">\n' : '';
   return (
     '<!doctype html>\n' +
     '<html lang="en">\n' +
@@ -287,6 +326,7 @@ function layout(opts) {
     '<title>' + title + '</title>\n' +
     '<meta name="description" content="' + description + '">\n' +
     canonicalTag +
+    robotsTag +
     '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Poppins:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,600&display=swap">\n' +
@@ -314,7 +354,9 @@ function layout(opts) {
     '\n</main>\n' +
     renderFooter(site) +
     '</div>\n' +
+    '<div id="egg-wipe" class="egg-wipe" aria-hidden="true"></div>\n' +
     '<script>' + CURSOR_TRAIL_JS + '</script>\n' +
+    '<script>' + EASTER_EGG_JS + '</script>\n' +
     '</body>\n' +
     '</html>\n'
   );
@@ -675,6 +717,78 @@ function renderAboutPage(site, bodyHtml) {
   return layout({ site: site, title: 'About', activeUrl: '/about/', content: content, bodyClass: 'page-about' });
 }
 
+function renderRatingStars(rating) {
+  if (!rating) return '';
+  var full = Math.floor(rating);
+  var half = (rating - full) >= 0.5;
+  var empty = 5 - full - (half ? 1 : 0);
+  return '<span class="stars" aria-label="' + rating + ' out of 5 stars">' + '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(Math.max(0, empty)) + '</span>';
+}
+
+function renderReelJournalEntry(entry) {
+  var poster = entry.poster
+    ? '<a class="reel-poster-link" href="' + entry.link + '" rel="noopener noreferrer" target="_blank" tabindex="-1"><img class="reel-poster" src="' + entry.poster + '" alt="" width="60" height="90" loading="lazy"></a>'
+    : '';
+  var year = entry.year ? '<span class="reel-entry-year">' + escapeHtml(entry.year) + '</span>' : '';
+  var stars = renderRatingStars(entry.rating);
+  var rewatch = entry.rewatch ? '<span class="source-badge">rewatch</span>' : '';
+  var watched = entry.watchedDate ? '<time datetime="' + entry.watchedDate + '">' + fmtDate(entry.watchedDate) + '</time>' : '';
+  var review = entry.review ? '<p class="reel-review">' + escapeHtml(entry.review) + '</p>' : '';
+  return (
+    '<li class="reel-entry">' +
+    poster +
+    '<div class="reel-entry-body">' +
+    '<div class="reel-entry-head"><a class="reel-entry-title" href="' + entry.link + '" rel="noopener noreferrer" target="_blank">' + escapeHtml(entry.title) + '</a>' + year + '</div>' +
+    '<div class="reel-entry-meta">' + stars + watched + rewatch + '</div>' +
+    review +
+    '</div>' +
+    '</li>'
+  );
+}
+
+var REEL_COVER_COLORS = ['purple', 'pink', 'teal', 'orange', 'yellow', 'green'];
+
+function renderReelWatchlistItem(entry, i) {
+  var color = REEL_COVER_COLORS[i % REEL_COVER_COLORS.length];
+  return (
+    '<li class="cover-card cover-card--' + color + '">' +
+    '<a href="' + entry.link + '" rel="noopener noreferrer" target="_blank">' +
+    '<img class="cover-img" src="' + entry.poster + '" alt="Poster for ' + escapeHtml(entry.title) + '" width="140" height="210" loading="lazy">' +
+    '</a>' +
+    '<div class="cover-caption">' +
+    '<strong>' + escapeHtml(entry.title) + '</strong>' +
+    (entry.year ? '<span class="bookshelf-author">' + escapeHtml(entry.year) + '</span>' : '') +
+    '</div>' +
+    '</li>'
+  );
+}
+
+function renderLetterboxdPage(site, letterboxd) {
+  var journalSection = letterboxd.journal.length
+    ? '<h2 class="shelf-heading">Journal</h2><ul class="reel-journal">' + letterboxd.journal.map(renderReelJournalEntry).join('') + '</ul>'
+    : '<h2 class="shelf-heading">Journal</h2><p class="reel-empty">Nothing synced yet -- run <code>npm run sync-letterboxd</code> to pull the real diary.</p>';
+  var watchlistSection = letterboxd.watchlist.length
+    ? '<h2 class="shelf-heading">Watchlist</h2><ul class="cover-grid">' + letterboxd.watchlist.map(renderReelWatchlistItem).join('') + '</ul>'
+    : '<h2 class="shelf-heading">Watchlist</h2><p class="reel-empty">Nothing synced yet -- run <code>npm run sync-letterboxd</code> to pull the real list.</p>';
+
+  var content = (
+    '<h1 class="page-title">The Reel</h1>' +
+    '<p class="page-lede">The film diary and watchlist I keep off the main site, synced from <a href="' + letterboxd.profileUrl + '" rel="noopener noreferrer" target="_blank">Letterboxd</a>.</p>' +
+    journalSection +
+    watchlistSection +
+    '<p class="post-nav"><a href="/">&larr; Back to the surface</a></p>'
+  );
+
+  return layout({
+    site: site,
+    title: 'The Reel',
+    description: 'A hidden Letterboxd diary and watchlist.',
+    content: content,
+    bodyClass: 'page-reel',
+    robotsNoindex: true
+  });
+}
+
 function render404(site) {
   var content = '<h1 class="page-title">404</h1><p>There’s nothing here. <a href="/">Go home</a>.</p>';
   return layout({ site: site, title: 'Not Found', content: content });
@@ -688,6 +802,7 @@ module.exports = {
   renderBookshelfPage: renderBookshelfPage,
   renderProjectsPage: renderProjectsPage,
   renderAboutPage: renderAboutPage,
+  renderLetterboxdPage: renderLetterboxdPage,
   render404: render404,
   fmtDate: fmtDate
 };
