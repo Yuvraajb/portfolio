@@ -1521,6 +1521,27 @@ li.feed-status {
   font-size: 0.78rem;
 }
 
+/* The easter egg's tap target (see EASTER_EGG_JS): extra padding
+   widens the hit area for a finger without changing how the line
+   looks, and .egg-tapped gives a quick, silent pulse of feedback on
+   each tap -- the only hint anything happened, before the 5th tap
+   reveals /reel/. No visual affordance beforehand on purpose. Same in
+   both themes, so this stays unscoped. */
+.footer-note {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+}
+
+@keyframes egg-tap-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.45; }
+  100% { opacity: 1; }
+}
+
+.footer-note.egg-tapped {
+  animation: egg-tap-pulse 200ms ease;
+}
+
 .footer-meta {
   margin: 0;
   font-family: var(--font-mono);

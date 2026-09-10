@@ -180,27 +180,27 @@ var CURSOR_TRAIL_JS = (
   '})();'
 );
 
-/* A small easter egg: the Konami code, entered anywhere on the site,
-   iris-wipes to a hidden page (/reel/, not linked from nav or footer)
-   with a Letterboxd journal + watchlist. The wipe is a plain CSS
-   clip-path transition on a fixed overlay -- no experimental
-   cross-document View Transitions API needed, and it doubles as a
-   nod to an actual film transition (an iris wipe) given the subject.
-   z-index is set above CURSOR_TRAIL_JS's canvas (also 9999, appended
-   later in the DOM) so the wipe isn't drawn over mid-transition.
-   Logged to the console as the only hint, for anyone poking around
-   devtools. */
+/* A small easter egg leading to a hidden page (/reel/, not linked from
+   nav or footer) with a Letterboxd journal + watchlist. Two ways in,
+   sharing one reveal():
+   - Five taps/clicks on the footer's copyright line (#footer-secret)
+     within ~1.2s of each other -- works identically via mouse click or
+     touch tap, so it's the one that actually works on a phone. Each
+     tap pulses the line (.egg-tapped, see style.css) as tactile
+     feedback once you've started, with zero visual hint beforehand.
+   - The Konami code (keyboard), kept as a bonus for desktop users --
+     inert on touch-only devices since there's no keydown there, not
+     broken, just unavailable, same as the physical keyboard it needs.
+   The wipe itself is a plain CSS clip-path transition on a fixed
+   overlay -- no experimental cross-document View Transitions API
+   needed, and it doubles as a nod to an actual film transition (an
+   iris wipe) given the subject. z-index is set above CURSOR_TRAIL_JS's
+   canvas (also 9999, appended later in the DOM) so the wipe isn't
+   drawn over mid-transition. Logged to the console as the only
+   explicit hint, for anyone poking around devtools. */
 var EASTER_EGG_JS = (
   '(function(){' +
-  'var seq=["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];' +
-  'var pos=0;' +
-  'console.log("%cThere\'s a hidden reel of what I\'ve been watching somewhere on this site. You know the code.","color:#5b9df9;font-family:monospace;font-size:12px;");' +
-  'document.addEventListener("keydown",function(e){' +
-  'var key=e.key.length===1?e.key.toLowerCase():e.key;' +
-  'if(key===seq[pos]){' +
-  'pos++;' +
-  'if(pos===seq.length){' +
-  'pos=0;' +
+  'function reveal(){' +
   'var overlay=document.getElementById("egg-wipe");' +
   'var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;' +
   'if(overlay&&!reduce){' +
@@ -211,9 +211,28 @@ var EASTER_EGG_JS = (
   'location.href="/reel/";' +
   '}' +
   '}' +
-  '}else{' +
-  'pos=(key===seq[0])?1:0;' +
-  '}' +
+  'console.log("%cThere\'s a hidden reel of what I\'ve been watching somewhere on this site. Five taps in the right place will get you there.","color:#5b9df9;font-family:monospace;font-size:12px;");' +
+  'var seq=["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];' +
+  'var pos=0;' +
+  'document.addEventListener("keydown",function(e){' +
+  'var key=e.key.length===1?e.key.toLowerCase():e.key;' +
+  'if(key===seq[pos]){pos++;if(pos===seq.length){pos=0;reveal();}}' +
+  'else{pos=(key===seq[0])?1:0;}' +
+  '});' +
+  'document.addEventListener("DOMContentLoaded",function(){' +
+  'var spot=document.getElementById("footer-secret");' +
+  'if(!spot)return;' +
+  'var taps=0,lastTap=0;' +
+  'spot.addEventListener("click",function(){' +
+  'var now=Date.now();' +
+  'if(now-lastTap>1200)taps=0;' +
+  'lastTap=now;' +
+  'taps++;' +
+  'spot.classList.remove("egg-tapped");' +
+  'void spot.offsetWidth;' +
+  'spot.classList.add("egg-tapped");' +
+  'if(taps>=5){taps=0;reveal();}' +
+  '});' +
   '});' +
   '})();'
 );
@@ -306,7 +325,7 @@ function renderFooter(site) {
   return (
     '<footer class="site-footer">' +
     renderSocial(site) +
-    '<p class="footer-note">&copy; ' + year + ' ' + escapeHtml(site.name) + '</p>' +
+    '<p class="footer-note" id="footer-secret">&copy; ' + year + ' ' + escapeHtml(site.name) + '</p>' +
     '</footer>'
   );
 }
