@@ -159,9 +159,6 @@ function build() {
   var projectsPath = path.join(CONTENT_DIR, 'projects.json');
   var projects = fs.existsSync(projectsPath) ? readJson(projectsPath) : [];
 
-  var letterboxdPath = path.join(CONTENT_DIR, 'letterboxd.json');
-  var letterboxd = fs.existsSync(letterboxdPath) ? readJson(letterboxdPath) : null;
-
   var aboutRaw = fs.readFileSync(path.join(CONTENT_DIR, 'about.md'), 'utf8');
   var aboutParsed = parseFrontmatter(aboutRaw);
   var aboutHtml = mdToHtml(aboutParsed.content);
@@ -181,9 +178,7 @@ function build() {
   writeFile('bookshelf/index.html', templates.renderBookshelfPage(site));
   writeFile('projects/index.html', templates.renderProjectsPage(site, projects));
   writeFile('about/index.html', templates.renderAboutPage(site, aboutHtml));
-  if (letterboxd) {
-    writeFile('reel/index.html', templates.renderLetterboxdPage(site, letterboxd));
-  }
+  writeFile('reel/index.html', templates.renderLetterboxdPage(site));
   writeFile('404.html', templates.render404(site));
   writeFile('feed.xml', buildRssFeed(site, posts));
 

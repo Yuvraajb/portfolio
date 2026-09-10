@@ -2,9 +2,10 @@
 
 /**
  * Zero-dependency static file server for local preview of public/.
- * Also serves /api/substack-feed and /api/bookshelf so the blog and
- * bookshelf pages' live embeds work the same way locally as they do on
- * Vercel (see api/substack-feed.js and api/bookshelf.js).
+ * Also serves /api/substack-feed, /api/bookshelf, and /api/letterboxd so
+ * the blog, bookshelf, and hidden reel pages' live embeds work the same
+ * way locally as they do on Vercel (see api/substack-feed.js,
+ * api/bookshelf.js, api/letterboxd.js).
  * Usage: node scripts/server.js [port]
  */
 
@@ -13,6 +14,7 @@ var fs = require('fs');
 var path = require('path');
 var feedParser = require('./feed-parser.js');
 var goodreadsParser = require('./goodreads-parser.js');
+var letterboxdParser = require('./letterboxd-parser.js');
 
 var PORT = Number(process.argv[2] || process.env.PORT || 4000);
 var ROOT = path.join(__dirname, '..');
@@ -96,6 +98,31 @@ function handleBookshelf(req, res) {
   });
 }
 
+function handleLetterboxd(req, res) {
+  var site;
+  try {
+    site = readSiteJson();
+  } catch (e) {
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'Could not read content/site.json' }));
+    return;
+  }
+  var username = site.letterboxd && site.letterboxd.username;
+  if (!username) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'No letterboxd.username configured in content/site.json' }));
+    return;
+  }
+
+  letterboxdParser.fetchLetterboxd(username).then(function (data) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, journal: data.journal, watchlist: data.watchlist }));
+  }).catch(function (err) {
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: err.message }));
+  });
+}
+
 var server = http.createServer(function (req, res) {
   var routePath = req.url.split('?')[0];
   if (req.method === 'GET' && routePath === '/api/substack-feed') {
@@ -104,6 +131,10 @@ var server = http.createServer(function (req, res) {
   }
   if (req.method === 'GET' && routePath === '/api/bookshelf') {
     handleBookshelf(req, res);
+    return;
+  }
+  if (req.method === 'GET' && routePath === '/api/letterboxd') {
+    handleLetterboxd(req, res);
     return;
   }
 

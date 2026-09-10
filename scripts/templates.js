@@ -717,66 +717,58 @@ function renderAboutPage(site, bodyHtml) {
   return layout({ site: site, title: 'About', activeUrl: '/about/', content: content, bodyClass: 'page-about' });
 }
 
-function renderRatingStars(rating) {
-  if (!rating) return '';
-  var full = Math.floor(rating);
-  var half = (rating - full) >= 0.5;
-  var empty = 5 - full - (half ? 1 : 0);
-  return '<span class="stars" aria-label="' + rating + ' out of 5 stars">' + '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(Math.max(0, empty)) + '</span>';
-}
-
-function renderReelJournalEntry(entry) {
-  var poster = entry.poster
-    ? '<a class="reel-poster-link" href="' + entry.link + '" rel="noopener noreferrer" target="_blank" tabindex="-1"><img class="reel-poster" src="' + entry.poster + '" alt="" width="60" height="90" loading="lazy"></a>'
-    : '';
-  var year = entry.year ? '<span class="reel-entry-year">' + escapeHtml(entry.year) + '</span>' : '';
-  var stars = renderRatingStars(entry.rating);
-  var rewatch = entry.rewatch ? '<span class="source-badge">rewatch</span>' : '';
-  var watched = entry.watchedDate ? '<time datetime="' + entry.watchedDate + '">' + fmtDate(entry.watchedDate) + '</time>' : '';
-  var review = entry.review ? '<p class="reel-review">' + escapeHtml(entry.review) + '</p>' : '';
-  return (
-    '<li class="reel-entry">' +
-    poster +
-    '<div class="reel-entry-body">' +
-    '<div class="reel-entry-head"><a class="reel-entry-title" href="' + entry.link + '" rel="noopener noreferrer" target="_blank">' + escapeHtml(entry.title) + '</a>' + year + '</div>' +
-    '<div class="reel-entry-meta">' + stars + watched + rewatch + '</div>' +
-    review +
-    '</div>' +
-    '</li>'
-  );
-}
-
-var REEL_COVER_COLORS = ['purple', 'pink', 'teal', 'orange', 'yellow', 'green'];
-
-function renderReelWatchlistItem(entry, i) {
-  var color = REEL_COVER_COLORS[i % REEL_COVER_COLORS.length];
-  return (
-    '<li class="cover-card cover-card--' + color + '">' +
-    '<a href="' + entry.link + '" rel="noopener noreferrer" target="_blank">' +
-    '<img class="cover-img" src="' + entry.poster + '" alt="Poster for ' + escapeHtml(entry.title) + '" width="140" height="210" loading="lazy">' +
-    '</a>' +
-    '<div class="cover-caption">' +
-    '<strong>' + escapeHtml(entry.title) + '</strong>' +
-    (entry.year ? '<span class="bookshelf-author">' + escapeHtml(entry.year) + '</span>' : '') +
-    '</div>' +
-    '</li>'
-  );
-}
-
-function renderLetterboxdPage(site, letterboxd) {
-  var journalSection = letterboxd.journal.length
-    ? '<h2 class="shelf-heading">Journal</h2><ul class="reel-journal">' + letterboxd.journal.map(renderReelJournalEntry).join('') + '</ul>'
-    : '<h2 class="shelf-heading">Journal</h2><p class="reel-empty">Nothing synced yet -- run <code>npm run sync-letterboxd</code> to pull the real diary.</p>';
-  var watchlistSection = letterboxd.watchlist.length
-    ? '<h2 class="shelf-heading">Watchlist</h2><ul class="cover-grid">' + letterboxd.watchlist.map(renderReelWatchlistItem).join('') + '</ul>'
-    : '<h2 class="shelf-heading">Watchlist</h2><p class="reel-empty">Nothing synced yet -- run <code>npm run sync-letterboxd</code> to pull the real list.</p>';
-
+/* Same live-embed pattern as renderSubstackEmbed/renderBookshelfPage --
+   fetches api/letterboxd.js client-side and builds the journal list +
+   watchlist cover-grid in the browser, so a new diary entry shows up on
+   next load with no rebuild. Reuses the Bookshelf page's own
+   cover-grid/cover-card classes for the watchlist (same poster-grid
+   pattern) and new reel-entry classes for the journal. */
+function renderLetterboxdPage(site) {
+  var profileUrl = (site.letterboxd && site.letterboxd.profileUrl) || 'https://letterboxd.com/';
   var content = (
     '<h1 class="page-title">The Reel</h1>' +
-    '<p class="page-lede">The film diary and watchlist I keep off the main site, synced from <a href="' + letterboxd.profileUrl + '" rel="noopener noreferrer" target="_blank">Letterboxd</a>.</p>' +
-    journalSection +
-    watchlistSection +
-    '<p class="post-nav"><a href="/">&larr; Back to the surface</a></p>'
+    '<p class="page-lede">The film diary and watchlist I keep off the main site, synced from <a href="' + escapeHtml(profileUrl) + '" rel="noopener noreferrer" target="_blank">Letterboxd</a>.</p>' +
+    '<div id="reel-journal-section"><h2 class="shelf-heading">Journal</h2><p class="feed-status" id="reel-journal-status">Loading your diary&hellip;</p></div>' +
+    '<div id="reel-watchlist-section"><h2 class="shelf-heading">Watchlist</h2><p class="feed-status" id="reel-watchlist-status">Loading your watchlist&hellip;</p></div>' +
+    '<p class="post-nav"><a href="/">&larr; Back to the surface</a></p>' +
+    '<script>(function(){' +
+    'function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
+    'function stars(r){if(!r)return "";var full=Math.floor(r);var half=(r-full)>=0.5;var empty=5-full-(half?1:0);return "<span class=\\"stars\\" aria-label=\\""+r+" out of 5 stars\\">"+"\\u2605".repeat(full)+(half?"\\u00bd":"")+"\\u2606".repeat(Math.max(0,empty))+"</span>";}' +
+    'var jSection=document.getElementById("reel-journal-section");' +
+    'var wSection=document.getElementById("reel-watchlist-section");' +
+    'if(!jSection||!wSection)return;' +
+    'window.__cachedFetch("letterboxd-cache","/api/letterboxd",function(data){' +
+    'if(!data||!data.ok){' +
+    'jSection.innerHTML="<h2 class=\\"shelf-heading\\">Journal</h2><p class=\\"feed-status\\">Couldn\\u2019t load the diary right now \\u2014 view it directly on <a href=\\"' + escapeHtml(profileUrl) + '\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\">Letterboxd \\u2197</a></p>";' +
+    'wSection.innerHTML="<h2 class=\\"shelf-heading\\">Watchlist</h2><p class=\\"feed-status\\">Couldn\\u2019t load the watchlist right now.</p>";' +
+    'return;' +
+    '}' +
+    'var journal=data.journal||[];' +
+    'var watchlist=data.watchlist||[];' +
+    'if(journal.length){' +
+    'jSection.innerHTML="<h2 class=\\"shelf-heading\\">Journal</h2><ul class=\\"reel-journal\\">"+journal.map(function(e){' +
+    'var poster=e.poster?("<a class=\\"reel-poster-link\\" href=\\""+esc(e.link)+"\\" rel=\\"noopener noreferrer\\" target=\\"_blank\\" tabindex=\\"-1\\"><img class=\\"reel-poster\\" src=\\""+esc(e.poster)+"\\" alt=\\"\\" width=\\"60\\" height=\\"90\\" loading=\\"lazy\\"></a>"):"";' +
+    'var year=e.year?("<span class=\\"reel-entry-year\\">"+esc(e.year)+"</span>"):"";' +
+    'var watchedDate=e.watchedDate?new Date(e.watchedDate+"T00:00:00Z").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric",timeZone:"UTC"}):"";' +
+    'var watched=watchedDate?("<time datetime=\\""+esc(e.watchedDate)+"\\">"+esc(watchedDate)+"</time>"):"";' +
+    'var rewatch=e.rewatch?"<span class=\\"source-badge\\">rewatch</span>":"";' +
+    'var review=e.review?("<p class=\\"reel-review\\">"+esc(e.review)+"</p>"):"";' +
+    'return "<li class=\\"reel-entry\\">"+poster+"<div class=\\"reel-entry-body\\"><div class=\\"reel-entry-head\\"><a class=\\"reel-entry-title\\" href=\\""+esc(e.link)+"\\" rel=\\"noopener noreferrer\\" target=\\"_blank\\">"+esc(e.title)+"</a>"+year+"</div><div class=\\"reel-entry-meta\\">"+stars(e.rating)+watched+rewatch+"</div>"+review+"</div></li>";' +
+    '}).join("")+"</ul>";' +
+    '}else{' +
+    'jSection.innerHTML="<h2 class=\\"shelf-heading\\">Journal</h2><p class=\\"feed-status\\">Nothing logged yet.</p>";' +
+    '}' +
+    'if(watchlist.length){' +
+    'var COLORS=["purple","pink","teal","orange","yellow","green"];' +
+    'wSection.innerHTML="<h2 class=\\"shelf-heading\\">Watchlist</h2><ul class=\\"cover-grid\\">"+watchlist.map(function(e,i){' +
+    'var color=COLORS[i%COLORS.length];' +
+    'return "<li class=\\"cover-card cover-card--"+color+"\\"><a href=\\""+esc(e.link)+"\\" rel=\\"noopener noreferrer\\" target=\\"_blank\\"><img class=\\"cover-img\\" src=\\""+esc(e.poster)+"\\" alt=\\"Poster for "+esc(e.title)+"\\" width=\\"140\\" height=\\"210\\" loading=\\"lazy\\"></a><div class=\\"cover-caption\\"><strong>"+esc(e.title)+"</strong>"+(e.year?("<span class=\\"bookshelf-author\\">"+esc(e.year)+"</span>"):"")+"</div></li>";' +
+    '}).join("")+"</ul>";' +
+    '}else{' +
+    'wSection.innerHTML="<h2 class=\\"shelf-heading\\">Watchlist</h2><p class=\\"feed-status\\">Nothing on the watchlist yet.</p>";' +
+    '}' +
+    '});' +
+    '})();</script>'
   );
 
   return layout({

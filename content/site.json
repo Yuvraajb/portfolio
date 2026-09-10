@@ -19,6 +19,11 @@
     "profileUrl": "https://www.goodreads.com/user/show/165341026-yuvraaj-bhatter",
     "note": "Bookshelf page and widget embed these shelves live client-side via api/bookshelf.js (see scripts/goodreads-parser.js) -- new books show up automatically, no rebuild needed."
   },
+  "letterboxd": {
+    "username": "yuvraajzz",
+    "profileUrl": "https://letterboxd.com/yuvraajzz/",
+    "note": "The hidden /reel/ page embeds the diary + watchlist live client-side via api/letterboxd.js (see scripts/letterboxd-parser.js) -- new entries show up automatically, no rebuild needed."
+  },
   "social": [
     { "label": "GitHub", "url": "https://github.com/Yuvraajb", "icon": "github" },
     { "label": "Substack", "url": "https://substack.com/@yuvraajb/posts", "icon": "substack" },
