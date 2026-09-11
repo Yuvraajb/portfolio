@@ -615,38 +615,97 @@ function renderPost(site, post) {
   });
 }
 
-/* Same live-embed pattern as renderSubstackEmbed/renderBookshelfWidget --
-   fetches api/bookshelf.js client-side and builds the grouped cover
-   grid in the browser, so a newly-shelved book shows up on next load
-   with no rebuild. */
+/* A literal shelf of book spines instead of a cover grid -- still the
+   same live-embed pattern (api/bookshelf.js, window.__cachedFetch), just
+   a different presentation of the exact same real data. No genre/year
+   fields exist anywhere in the data model (Goodreads' RSS doesn't expose
+   them, see goodreads-parser.js's itemToBook) so the filter chips use
+   the three real reading-status values instead of invented categories,
+   and the hover card only shows fields that are actually real: title,
+   author, status, rating, finish date. Spine width/color are derived
+   deterministically from the title (a tiny hash + the same six-slot
+   color system cover-card already uses), so the shelf looks organic
+   without inventing anything about the books themselves. */
 function renderBookshelfPage(site) {
+  var recommendHref = 'mailto:' + (site.email || 'hello@example.com') + '?subject=' + encodeURIComponent('Book recommendation');
   var content = (
-    '<h1 class="page-title">Bookshelf</h1>' +
-    '<p class="page-lede">What I’m reading, have read, and want to get to.</p>' +
-    '<div id="bookshelf-page"><p class="feed-status" id="bookshelf-page-status">Loading your shelves&hellip;</p></div>' +
+    '<section class="library-hero">' +
+    '<p class="library-eyebrow">A personal archive</p>' +
+    '<h1 class="library-title">Welcome to my library<span class="library-cursor" aria-hidden="true"></span></h1>' +
+    '<p class="library-count" id="library-count"></p>' +
+    '<a class="view-all-btn library-recommend" href="' + escapeHtml(recommendHref) + '">Recommend a book &rarr;</a>' +
+    '</section>' +
+    '<div class="library-controls">' +
+    '<input class="library-search" id="library-search" type="text" placeholder="What are you looking for?" autocomplete="off" aria-label="Search the library">' +
+    '<div class="library-filters" id="library-filters">' +
+    '<button type="button" class="library-chip is-active" data-filter="all">All</button>' +
+    '<button type="button" class="library-chip" data-filter="currently-reading">Currently Reading</button>' +
+    '<button type="button" class="library-chip" data-filter="read">Finished</button>' +
+    '<button type="button" class="library-chip" data-filter="want-to-read">Want to Read</button>' +
+    '</div>' +
+    '</div>' +
+    '<ul class="library-shelf" id="library-shelf"><li class="feed-status">Loading your shelves&hellip;</li></ul>' +
     '<script>(function(){' +
     'function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;"}[c];});}' +
-    'var root=document.getElementById("bookshelf-page");' +
-    'var status=document.getElementById("bookshelf-page-status");' +
-    'if(!root)return;' +
+    'function hashSmall(str){var h=0;for(var i=0;i<str.length;i++){h=(h*31+str.charCodeAt(i))|0;}return Math.abs(h);}' +
+    'var WIDTHS=[30,34,38,42,46];' +
     'var COLORS=["purple","pink","teal","orange","yellow","green"];' +
-    'var GROUPS=[["currently-reading","Currently Reading"],["read","Finished"],["want-to-read","Want to Read"]];' +
-    'window.__cachedFetch("bookshelf-cache","/api/bookshelf",function(data){' +
-    'if(!data||!data.ok||!data.books||!data.books.length){status.textContent="Couldn’t load your shelves right now \\u2014 view them directly on Goodreads \\u2197";return;}' +
-    'var html=GROUPS.map(function(g){' +
-    'var key=g[0],label=g[1];' +
-    'var books=data.books.filter(function(b){return b.status===key;});' +
-    'if(!books.length)return "";' +
-    'var items=books.map(function(b,i){' +
-    'var color=COLORS[i%COLORS.length];' +
+    'var shelfEl=document.getElementById("library-shelf");' +
+    'var countEl=document.getElementById("library-count");' +
+    'var searchEl=document.getElementById("library-search");' +
+    'var filtersEl=document.getElementById("library-filters");' +
+    'if(!shelfEl)return;' +
+    'var allBooks=[];' +
+    'var activeFilter="all";' +
+    'function statusLabel(s){return s==="currently-reading"?"Currently reading":(s==="want-to-read"?"Want to read":"Finished");}' +
+    'function renderShelf(){' +
+    'var q=((searchEl&&searchEl.value)||"").trim().toLowerCase();' +
+    'var visible=allBooks.filter(function(b){' +
+    'if(activeFilter!=="all"&&b.status!==activeFilter)return false;' +
+    'if(q&&b._search.indexOf(q)===-1)return false;' +
+    'return true;' +
+    '});' +
+    'if(!visible.length){shelfEl.innerHTML="<li class=\\"feed-status\\">No books match.</li>";return;}' +
+    'shelfEl.innerHTML=visible.map(function(b){' +
     'var stars=b.rating?("<span class=\\"stars\\" aria-label=\\""+b.rating+" out of 5 stars\\">"+"\\u2605".repeat(b.rating)+"\\u2606".repeat(5-b.rating)+"</span>"):"";' +
     'var finishedDate=b.dateFinished?new Date(b.dateFinished+"T00:00:00Z").toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric",timeZone:"UTC"}):"";' +
     'var finished=finishedDate?("<span class=\\"bookshelf-date\\">Finished "+esc(finishedDate)+"</span>"):"";' +
-    'return "<li class=\\"cover-card cover-card--"+color+"\\"><a href=\\""+esc(b.link||"#")+"\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\"><img class=\\"cover-img\\" src=\\""+esc(b.cover)+"\\" alt=\\"Cover of "+esc(b.title)+"\\" width=\\"140\\" height=\\"210\\" loading=\\"lazy\\"></a><div class=\\"cover-caption\\"><strong>"+esc(b.title)+"</strong><span class=\\"bookshelf-author\\">"+esc(b.author)+"</span>"+stars+finished+"</div></li>";' +
+    'return "<li class=\\"library-spine library-spine--"+b._color+"\\" style=\\"--spine-width:"+b._width+"px\\">"+' +
+    '"<a class=\\"library-spine-link\\" href=\\""+esc(b.link||"#")+"\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\" aria-label=\\""+esc(b.title)+" by "+esc(b.author)+"\\">"+' +
+    '"<span class=\\"library-spine-title\\">"+esc(b.title)+"</span>"+' +
+    '"</a>"+' +
+    '"<div class=\\"library-spine-card\\">"+' +
+    '"<strong>"+esc(b.title)+"</strong>"+' +
+    '"<span class=\\"bookshelf-author\\">"+esc(b.author)+"</span>"+' +
+    '"<span class=\\"library-spine-status\\">"+statusLabel(b.status)+"</span>"+' +
+    'stars+finished+' +
+    '"</div>"+' +
+    '"</li>";' +
     '}).join("");' +
-    'return "<h2 class=\\"shelf-heading\\">"+label+"</h2><ul class=\\"cover-grid\\">"+items+"</ul>";' +
-    '}).join("");' +
-    'root.innerHTML=html;' +
+    '}' +
+    'if(searchEl)searchEl.addEventListener("input",renderShelf);' +
+    'if(filtersEl)filtersEl.addEventListener("click",function(e){' +
+    'var btn=e.target.closest?e.target.closest(".library-chip"):null;' +
+    'if(!btn)return;' +
+    'var chips=filtersEl.querySelectorAll(".library-chip");' +
+    'for(var i=0;i<chips.length;i++)chips[i].classList.remove("is-active");' +
+    'btn.classList.add("is-active");' +
+    'activeFilter=btn.getAttribute("data-filter");' +
+    'renderShelf();' +
+    '});' +
+    'window.__cachedFetch("bookshelf-cache","/api/bookshelf",function(data){' +
+    'if(!data||!data.ok||!data.books||!data.books.length){' +
+    'shelfEl.innerHTML="<li class=\\"feed-status\\">Couldn\\u2019t load the shelf right now \\u2014 view it directly on <a href=\\"' + escapeHtml((site.goodreads && site.goodreads.profileUrl) || 'https://www.goodreads.com/') + '\\" target=\\"_blank\\" rel=\\"noopener noreferrer\\">Goodreads \\u2197</a></li>";' +
+    'return;' +
+    '}' +
+    'allBooks=data.books.map(function(b,i){' +
+    'b._width=WIDTHS[hashSmall(b.title)%WIDTHS.length];' +
+    'b._color=COLORS[i%COLORS.length];' +
+    'b._search=(b.title+" "+b.author).toLowerCase();' +
+    'return b;' +
+    '});' +
+    'if(countEl)countEl.textContent=allBooks.length+(allBooks.length===1?" volume":" volumes");' +
+    'renderShelf();' +
     '});' +
     '})();</script>'
   );
