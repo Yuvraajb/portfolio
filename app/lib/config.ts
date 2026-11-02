@@ -14,8 +14,13 @@ const resolveSiteUrl = (): string => {
     return `https://${process.env.VERCEL_URL}`;
   }
 
+  // The live site. This is a *fallback* — set SITE_URL explicitly in the
+  // environment, especially before pointing a custom domain here. Getting it
+  // wrong is quiet and expensive: canonicals, OG image URLs, the sitemap and
+  // the RSS feed all advertise whatever this returns, so a stale value tells
+  // search engines the real content lives somewhere it doesn't.
   return process.env.NODE_ENV === "production"
-    ? "https://yuvraaj.dev"
+    ? "https://yuvraajb.vercel.app"
     : "http://localhost:3000";
 };
 
