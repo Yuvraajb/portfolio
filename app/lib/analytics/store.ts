@@ -35,33 +35,49 @@ const blobStore = (): Store => ({
 
   async append(event) {
     const { put } = await import("@vercel/blob");
+    // `private`: these records describe real visitors. Even hashed, they have
+    // no business being fetchable by anyone who guesses a URL.
     await put(
       `analytics/${dayKey(event.ts)}/${event.id}.json`,
       JSON.stringify(event),
-      { access: "public", contentType: "application/json", addRandomSuffix: false },
+      {
+        access: "private",
+        contentType: "application/json",
+        addRandomSuffix: false,
+      },
     );
   },
 
   async range(days) {
-    const { list } = await import("@vercel/blob");
+    const { list, get } = await import("@vercel/blob");
     const out: AnalyticsEvent[] = [];
 
     for (const day of days) {
       let cursor: string | undefined;
+
       do {
-        const page = await list({ prefix: `analytics/${day}/`, cursor, limit: 1000 });
+        const page = await list({
+          prefix: `analytics/${day}/`,
+          cursor,
+          limit: 1000,
+        });
         cursor = page.hasMore ? page.cursor : undefined;
 
+        // Private blobs aren't fetchable by URL — read them back through the
+        // authenticated SDK call instead.
         const batch = await Promise.all(
           page.blobs.map(async (blob) => {
             try {
-              const res = await fetch(blob.url, { cache: "no-store" });
-              return (await res.json()) as AnalyticsEvent;
+              const result = await get(blob.pathname, { access: "private" });
+              if (!result) return null;
+              const text = await new Response(result.stream).text();
+              return JSON.parse(text) as AnalyticsEvent;
             } catch {
               return null;
             }
           }),
         );
+
         out.push(...batch.filter((e): e is AnalyticsEvent => e !== null));
       } while (cursor);
     }
