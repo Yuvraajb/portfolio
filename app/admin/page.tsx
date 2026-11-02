@@ -1,8 +1,8 @@
 import { buildSummary } from "@/app/lib/analytics/aggregate";
-import { runSeoAudit } from "@/app/lib/seo/audit";
 import getMetadata from "@/app/lib/metadata";
 import { Container } from "@/components/layout-primitives";
-import { Panel, RankedList, SeoIssues, StatTile, TrafficChart } from "./components/panels";
+import { Panel, RankedList, StatTile, TrafficChart } from "./components/panels";
+import { SeoPanel } from "./components/seo-panel";
 import { LogoutButton } from "./components/logout-button";
 
 export const metadata = getMetadata({ title: "Console", noIndex: true });
@@ -15,12 +15,11 @@ const duration = (seconds: number): string =>
   seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`;
 
 export default async function AdminPage() {
-  // The SEO audit fetches the site over HTTP, so it can fail independently of
-  // analytics — don't let it take the whole dashboard down.
-  const [summary, seo] = await Promise.all([
-    buildSummary(30),
-    runSeoAudit().catch(() => null),
-  ]);
+  // Analytics only. The SEO audit is deliberately NOT awaited here — it
+  // fetches a dozen routes, which on a serverless host means a dozen further
+  // invocations of this same function. Doing that inline hung /admin in
+  // production, so <SeoPanel> loads it client-side after first paint.
+  const summary = await buildSummary(30);
 
   return (
     <div className="min-h-dvh pb-24">
@@ -138,15 +137,7 @@ export default async function AdminPage() {
             />
           </Panel>
 
-          <Panel title="SEO health">
-            {seo ? (
-              <SeoIssues report={seo} />
-            ) : (
-              <p className="py-6 text-center font-mono text-xs text-[var(--color-faint)]">
-                Audit unavailable — the site could not be fetched.
-              </p>
-            )}
-          </Panel>
+          <SeoPanel />
         </div>
       </Container>
     </div>

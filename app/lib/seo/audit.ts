@@ -54,8 +54,13 @@ const auditRoute = async (route: string): Promise<SeoIssue[]> => {
 
   let html: string;
   try {
+    // Hard timeout. This audit runs *inside* a serverless function fetching
+    // the site's own domain, so each request spawns another invocation. With
+    // no deadline a slow route can pin the audit open indefinitely — which it
+    // did in production, hanging /admin for 11 minutes before this was added.
     const res = await fetch(url, {
       cache: "no-store",
+      signal: AbortSignal.timeout(6000),
       headers: { "User-Agent": "yb-seo-audit" },
     });
     if (!res.ok) {
@@ -161,8 +166,17 @@ export const runSeoAudit = async (): Promise<SeoReport> => {
       .map((p) => `/writing/${p.slug}`),
   ];
 
-  const results = await Promise.all(routes.map(auditRoute));
-  const issues = results.flat();
+  // Audit in small batches rather than all at once. Firing 12 simultaneous
+  // self-requests can saturate the function's own concurrency and deadlock —
+  // the audit ends up waiting on invocations that are waiting on it.
+  const issues: SeoIssue[] = [];
+  const BATCH = 3;
+  for (let i = 0; i < routes.length; i += BATCH) {
+    const batch = await Promise.all(
+      routes.slice(i, i + BATCH).map(auditRoute),
+    );
+    issues.push(...batch.flat());
+  }
 
   const errors = issues.filter((i) => i.severity === "error").length;
   const warnings = issues.filter((i) => i.severity === "warning").length;

@@ -27,6 +27,11 @@ export type Store = {
 
 const dayKey = (ts: number) => new Date(ts).toISOString().slice(0, 10);
 
+/** Most recent N events read per dashboard load — bounds the worst case. */
+const MAX_EVENTS = 4000;
+/** Simultaneous blob reads. Enough to be fast, not enough to exhaust sockets. */
+const READ_CONCURRENCY = 24;
+
 /* ------------------------------------------------------------------ Blob */
 
 const blobStore = (): Store => ({
@@ -50,36 +55,46 @@ const blobStore = (): Store => ({
 
   async range(days) {
     const { list, get } = await import("@vercel/blob");
+
+    // One paginated listing under `analytics/`, filtered in memory — rather
+    // than a separate `list()` per day, which cost 30 round trips even for
+    // days with no events.
+    const wanted = new Set(days);
+    const paths: string[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const page = await list({ prefix: "analytics/", cursor, limit: 1000 });
+      cursor = page.hasMore ? page.cursor : undefined;
+
+      for (const blob of page.blobs) {
+        // analytics/YYYY-MM-DD/<id>.json
+        const day = blob.pathname.split("/")[1];
+        if (wanted.has(day)) paths.push(blob.pathname);
+      }
+    } while (cursor && paths.length < MAX_EVENTS);
+
+    // Private blobs aren't fetchable by URL, so each is read back through the
+    // authenticated SDK. Bounded concurrency keeps a busy month from opening
+    // hundreds of simultaneous connections inside one function.
     const out: AnalyticsEvent[] = [];
+    const capped = paths.slice(-MAX_EVENTS);
 
-    for (const day of days) {
-      let cursor: string | undefined;
-
-      do {
-        const page = await list({
-          prefix: `analytics/${day}/`,
-          cursor,
-          limit: 1000,
-        });
-        cursor = page.hasMore ? page.cursor : undefined;
-
-        // Private blobs aren't fetchable by URL — read them back through the
-        // authenticated SDK call instead.
-        const batch = await Promise.all(
-          page.blobs.map(async (blob) => {
-            try {
-              const result = await get(blob.pathname, { access: "private" });
-              if (!result) return null;
-              const text = await new Response(result.stream).text();
-              return JSON.parse(text) as AnalyticsEvent;
-            } catch {
-              return null;
-            }
-          }),
-        );
-
-        out.push(...batch.filter((e): e is AnalyticsEvent => e !== null));
-      } while (cursor);
+    for (let i = 0; i < capped.length; i += READ_CONCURRENCY) {
+      const batch = await Promise.all(
+        capped.slice(i, i + READ_CONCURRENCY).map(async (pathname) => {
+          try {
+            const result = await get(pathname, { access: "private" });
+            if (!result) return null;
+            return JSON.parse(
+              await new Response(result.stream).text(),
+            ) as AnalyticsEvent;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      out.push(...batch.filter((e): e is AnalyticsEvent => e !== null));
     }
 
     return out;
