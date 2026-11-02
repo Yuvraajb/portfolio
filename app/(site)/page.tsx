@@ -16,7 +16,7 @@ export const metadata = getMetadata();
 export default async function LandingPage() {
   const site = await getSite();
   const [projects, posts, books, profile] = await Promise.all([
-    getFeaturedProjects(5),
+    getFeaturedProjects(6),
     getPosts(),
     getBooks(),
     fetchProfileStats(site.github.username),

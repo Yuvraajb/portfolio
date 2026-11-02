@@ -7,11 +7,15 @@
     "year": "2026",
     "category": "ios",
     "tag": "Swift Student Challenge Winner",
-    "award": "Apple · 1 of 350 winners worldwide",
+    "award": "Apple \u00b7 1 of 350 winners worldwide",
     "featured": true,
     "summary": "An interactive Artemis II mission experience built in Swift and SceneKit.",
-    "description": "A playable, scientifically-grounded walkthrough of NASA's Artemis II lunar flyby, built entirely in Swift and SceneKit with no external 3D assets. Selected as one of 350 winners of Apple's Swift Student Challenge 2026 — which meant three days at Apple Park for WWDC '26.",
-    "stack": ["Swift", "SwiftUI", "SceneKit"],
+    "description": "A playable, scientifically-grounded walkthrough of NASA's Artemis II lunar flyby, built entirely in Swift and SceneKit with no external 3D assets. Selected as one of 350 winners of Apple's Swift Student Challenge 2026 \u2014 which meant three days at Apple Park for WWDC '26.",
+    "stack": [
+      "Swift",
+      "SwiftUI",
+      "SceneKit"
+    ],
     "highlights": [
       "Orbital mechanics simulated and rendered in real time",
       "Every 3D asset generated procedurally in SceneKit",
@@ -25,12 +29,17 @@
     "url": "https://github.com/Yuvraajb/H4H-2026",
     "year": "2026",
     "category": "ai",
-    "tag": "1st Place · Hack4Humanity",
+    "tag": "1st Place \u00b7 Hack4Humanity",
     "award": "ElevenLabs Track Winner",
     "featured": true,
     "summary": "A real-time AI crisis response system.",
-    "description": "A voice-first emergency triage system that listens to a caller, classifies the nature and severity of the crisis in real time, and routes it to the right responder — built in 24 hours and taking first place in the ElevenLabs track at Hack4Humanity 2026.",
-    "stack": ["Swift", "ElevenLabs", "LLMs", "Realtime Audio"],
+    "description": "A voice-first emergency triage system that listens to a caller, classifies the nature and severity of the crisis in real time, and routes it to the right responder \u2014 built in 24 hours and taking first place in the ElevenLabs track at Hack4Humanity 2026.",
+    "stack": [
+      "Swift",
+      "ElevenLabs",
+      "LLMs",
+      "Realtime Audio"
+    ],
     "highlights": [
       "Sub-second speech-to-intent classification",
       "Severity-aware routing to the correct responder",
@@ -48,7 +57,13 @@
     "featured": true,
     "summary": "An ML platform predicting international football and simulating the 2026 World Cup.",
     "description": "A hobby machine-learning platform that models international football using gradient-boosted trees, Bayesian hierarchical models, graph neural networks and stacked ensembles, then runs Monte Carlo simulations over the full 2026 World Cup bracket. It called Spain over Argentina in the final.",
-    "stack": ["Python", "PyTorch", "GNNs", "Monte Carlo", "Bayesian"],
+    "stack": [
+      "Python",
+      "PyTorch",
+      "GNNs",
+      "Monte Carlo",
+      "Bayesian"
+    ],
     "highlights": [
       "Correctly predicted Spain over Argentina in the final",
       "Stacked ensemble over trees, Bayesian and graph models",
@@ -65,8 +80,13 @@
     "tag": "Quantitative research",
     "featured": true,
     "summary": "A research engine exploring mean reversion, risk, and market regimes.",
-    "description": "A backtesting engine for systematically testing whether a mean-reversion edge actually exists — with regime detection, risk decomposition, and the kind of honest statistics that usually kill a strategy before it reaches capital.",
-    "stack": ["Python", "NumPy", "pandas", "statsmodels"],
+    "description": "A backtesting engine for systematically testing whether a mean-reversion edge actually exists \u2014 with regime detection, risk decomposition, and the kind of honest statistics that usually kill a strategy before it reaches capital.",
+    "stack": [
+      "Python",
+      "NumPy",
+      "pandas",
+      "statsmodels"
+    ],
     "highlights": [
       "Regime-aware evaluation instead of a single blended backtest",
       "Risk and drawdown decomposition per market regime",
@@ -83,8 +103,12 @@
     "category": "quant",
     "tag": "Personal trading agent",
     "summary": "An agentic trading assistant that reasons about markets in natural language.",
-    "description": "A personal trading agent that turns a plain-language thesis into a testable strategy — pulling data, forming a position view, and explaining its reasoning rather than emitting an opaque signal.",
-    "stack": ["Python", "LLMs", "Agents"],
+    "description": "A personal trading agent that turns a plain-language thesis into a testable strategy \u2014 pulling data, forming a position view, and explaining its reasoning rather than emitting an opaque signal.",
+    "stack": [
+      "Python",
+      "LLMs",
+      "Agents"
+    ],
     "highlights": [
       "Natural-language thesis to executable strategy",
       "Explains its reasoning instead of emitting a black-box signal"
@@ -97,11 +121,15 @@
     "url": "https://github.com/Yuvraajb/aicHack",
     "year": "2026",
     "category": "ai",
-    "tag": "Adobe × SCU AIC Hackathon",
+    "tag": "Adobe \u00d7 SCU AIC Hackathon",
     "private": true,
     "summary": "A two-sided marketplace for AI tools, with a managed API gateway.",
-    "description": "Sellers upload AI/API tools; buyers call them through a managed gateway that handles auth, routing, usage metering, billing, demos and seller analytics — so neither side has to build the boring half of an API business.",
-    "stack": ["TypeScript", "Next.js", "PostgreSQL"],
+    "description": "Sellers upload AI/API tools; buyers call them through a managed gateway that handles auth, routing, usage metering, billing, demos and seller analytics \u2014 so neither side has to build the boring half of an API business.",
+    "stack": [
+      "TypeScript",
+      "Next.js",
+      "PostgreSQL"
+    ],
     "highlights": [
       "Managed gateway handling auth, routing and metering",
       "Usage-based billing with seller-side analytics"
@@ -114,11 +142,15 @@
     "url": "https://github.com/Yuvraajb/Homeability.ai",
     "year": "2025",
     "category": "ai",
-    "tag": "3rd Place · AWS × INRIX",
+    "tag": "3rd Place \u00b7 AWS \u00d7 INRIX",
     "award": "AI for Scalable Solutions track",
     "summary": "Accessibility scoring for housing, built in 22 hours.",
-    "description": "A system that scores homes and neighbourhoods for accessibility — placing 3rd overall in the \"AI for Scalable Solutions\" track at the AWS × INRIX Hackathon, against 254 participants and 38 submissions.",
-    "stack": ["Python", "AWS", "ML"],
+    "description": "A system that scores homes and neighbourhoods for accessibility \u2014 placing 3rd overall in the \"AI for Scalable Solutions\" track at the AWS \u00d7 INRIX Hackathon, against 254 participants and 38 submissions.",
+    "stack": [
+      "Python",
+      "AWS",
+      "ML"
+    ],
     "highlights": [
       "3rd of 38 submissions, 254 participants",
       "Built in a 22-hour hackathon window"
@@ -134,12 +166,17 @@
     "category": "hardware",
     "tag": "Human Computer Lab challenge",
     "summary": "A Luxo-style desk lamp with a personality, simulated in 5 degrees of freedom.",
-    "description": "An expressive character driven by a simulated 5-DOF lamp robot — the Pixar lamp problem taken seriously, where personality has to emerge from joint angles and timing alone, with no face and no voice.",
-    "stack": ["TypeScript", "WebGL", "Robotics"],
+    "description": "An expressive character driven by a simulated 5-DOF lamp robot \u2014 the Pixar lamp problem taken seriously, where personality has to emerge from joint angles and timing alone, with no face and no voice.",
+    "stack": [
+      "TypeScript",
+      "WebGL",
+      "Robotics"
+    ],
     "highlights": [
       "Personality expressed purely through 5-DOF motion",
       "Real-time inverse kinematics in the browser"
-    ]
+    ],
+    "featured": true
   },
   {
     "name": "Hiring Agent",
@@ -150,9 +187,14 @@
     "category": "ai",
     "tag": "AI agent",
     "summary": "An agent that evaluates and scores resumes.",
-    "description": "An LLM agent that reads a resume against a role and produces a structured, defensible score — built to surface the reasoning behind a rating rather than hide it behind a number.",
-    "stack": ["Python", "LLMs"],
-    "highlights": ["Structured, explainable scoring rubric"]
+    "description": "An LLM agent that reads a resume against a role and produces a structured, defensible score \u2014 built to surface the reasoning behind a rating rather than hide it behind a number.",
+    "stack": [
+      "Python",
+      "LLMs"
+    ],
+    "highlights": [
+      "Structured, explainable scoring rubric"
+    ]
   },
   {
     "name": "fastASL",
@@ -163,9 +205,15 @@
     "category": "ai",
     "tag": "Sign language translation",
     "summary": "Real-time sign language translation, pronounced \"fast as hell\".",
-    "description": "A translation pipeline between American Sign Language and text, optimised for latency — because a translator that lags is a translator nobody uses.",
-    "stack": ["TypeScript", "Python", "Computer Vision"],
-    "highlights": ["Latency-first architecture for live conversation"]
+    "description": "A translation pipeline between American Sign Language and text, optimised for latency \u2014 because a translator that lags is a translator nobody uses.",
+    "stack": [
+      "TypeScript",
+      "Python",
+      "Computer Vision"
+    ],
+    "highlights": [
+      "Latency-first architecture for live conversation"
+    ]
   },
   {
     "name": "Unit Test Generator",
@@ -177,7 +225,11 @@
     "tag": "Developer tooling",
     "summary": "LLM-driven Google Test generation for C++ projects.",
     "description": "Generates, refines and repairs Google Test unit tests for arbitrary C++ projects using local LLMs via Ollama, iterating against compiler output and coverage until the tests actually build and pass.",
-    "stack": ["C++", "Ollama", "YAML"],
+    "stack": [
+      "C++",
+      "Ollama",
+      "YAML"
+    ],
     "highlights": [
       "Iterates against real compiler errors until tests compile",
       "Coverage-guided refinement loop"
@@ -191,11 +243,16 @@
     "tag": "Habit tracker",
     "summary": "A habit tracker that grows a brain out of your habits.",
     "description": "Every habit completion spawns a glowing neuron inside a translucent brain; consecutive-day streaks wire synapses between them. Five life categories map to distinct anatomical regions, so over months your habits physically reshape the brain on screen.",
-    "stack": ["Swift", "SwiftUI", "SceneKit"],
+    "stack": [
+      "Swift",
+      "SwiftUI",
+      "SceneKit"
+    ],
     "highlights": [
-      "Hebbian growth model — cells that fire together, wire together",
-      "Brain geometry extruded procedurally from Bézier paths",
+      "Hebbian growth model \u2014 cells that fire together, wire together",
+      "Brain geometry extruded procedurally from B\u00e9zier paths",
       "Time-lapse scrubber over months of completion data"
-    ]
+    ],
+    "featured": true
   }
 ]

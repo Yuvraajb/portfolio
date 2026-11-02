@@ -25,16 +25,28 @@ const eslintConfig = defineConfig([
     // Vendored verbatim from the React Bits registry. Kept byte-for-byte as
     // shipped so re-running `shadcn add` never conflicts — which means their
     // ref-during-render and dep-array patterns have to be tolerated here.
+    // Scoped by naming convention, not a blanket glob: vendored files are
+    // PascalCase (as the registry ships them), authored ones are kebab-case.
+    // A broad `components/*` would silence these rules for our own code too.
     files: [
-      "components/GradientASCII.jsx",
-      "components/DecryptedText.tsx",
+      "components/AnimatedContent.tsx",
       "components/BlurText.tsx",
+      "components/CountUp.tsx",
+      "components/DecryptedText.tsx",
+      "components/GradientASCII.jsx",
+      "components/LogoLoop.tsx",
+      "components/MetaBalls.tsx",
+      "components/Orb.tsx",
       "components/RotatingText.tsx",
+      "components/SpotlightCard.tsx",
+      "components/StarBorder.tsx",
     ],
     rules: {
       "react-hooks/refs": "off",
       "react-hooks/exhaustive-deps": "off",
       "react-hooks/set-state-in-effect": "off",
+      "prefer-const": "off",
+      "@next/next/no-img-element": "off",
     },
   },
 ]);

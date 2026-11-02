@@ -39,9 +39,6 @@ export const Topbar = ({ links }: { links: NavLink[] }) => {
     return () => clearInterval(id);
   }, []);
 
-  // Close the mobile sheet whenever the route changes.
-  useEffect(() => setOpen(false), [pathname]);
-
   const isActive = (url: string) =>
     url === "/" ? pathname === "/" : pathname.startsWith(url);
 
@@ -128,6 +125,10 @@ export const Topbar = ({ links }: { links: NavLink[] }) => {
             <li key={link.url}>
               <Link
                 href={link.url}
+                // Closed here rather than in an effect on `pathname`: the tap
+                // is the actual cause, and reacting to the route change
+                // instead means a setState cascade on every navigation.
+                onClick={() => setOpen(false)}
                 className={`block border-b border-[var(--color-line)] py-4 font-mono text-sm ${
                   isActive(link.url)
                     ? "text-[var(--color-accent-bright)]"

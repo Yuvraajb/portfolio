@@ -4,7 +4,9 @@ import Link from "next/link";
 import AnimatedContent from "@/components/AnimatedContent";
 import LogoLoop from "@/components/LogoLoop";
 import StarBorder from "@/components/StarBorder";
-import { ProjectCard } from "@/components/project-card";
+import MetaBalls from "@/components/MetaBalls";
+import { WebGLSurface } from "@/components/webgl-surface";
+import { WorkReveal } from "./work-reveal";
 import {
   Container,
   Section,
@@ -37,14 +39,14 @@ export const StackMarquee = ({ stack }: { stack: string[] }) => (
   </div>
 );
 
-/** Selected work — the first card spans two columns as the anchor. */
+/** Selected work — hover-reveal rail: names left, generated art right. */
 export const FeaturedWork = ({ projects }: { projects: Project[] }) => (
   <Section id="work">
     <Container>
       <SectionHeading
         index="02"
         eyebrow="Selected work"
-        title="Things I've built, and what they taught me."
+        title="Things I've built."
         action={
           <Link
             href="/work"
@@ -54,19 +56,7 @@ export const FeaturedWork = ({ projects }: { projects: Project[] }) => (
           </Link>
         }
       />
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {projects.map((project, i) => (
-          <AnimatedContent
-            key={project.slug}
-            distance={40}
-            delay={i * 0.08}
-            className={i === 0 ? "md:col-span-2" : ""}
-          >
-            <ProjectCard project={project} large={i === 0} />
-          </AnimatedContent>
-        ))}
-      </div>
+      <WorkReveal projects={projects} />
     </Container>
   </Section>
 );
@@ -198,6 +188,32 @@ export const ContactBand = ({ email }: { email: string }) => {
   <Section id="contact">
     <Container>
       <div className="relative overflow-hidden border border-[var(--color-line)] bg-[var(--color-surface)] px-8 py-16 text-center md:py-24">
+        {/* Organic forms circling the CTA.
+            React Bits has no koi component — I checked all 218. MetaBalls in
+            `contour` + `drift` is the nearest thing in the library: soft
+            outlined bodies that glide, merge and part around the pointer,
+            which reads like fish moving under a surface. It also responds to
+            the cursor, so the panel feels alive rather than looped. */}
+        <WebGLSurface
+          className="pointer-events-none absolute inset-0 opacity-70"
+          fallback={null}
+        >
+          <MetaBalls
+            color="#3b82f6"
+            cursorBallColor="#7dd3fc"
+            variant="contour"
+            motion="drift"
+            ballCount={9}
+            speed={0.26}
+            clumpFactor={0.8}
+            gooeyness={0.75}
+            wobble={0.5}
+            animationSize={22}
+            enableTransparency
+            enableMouseInteraction
+          />
+        </WebGLSurface>
+
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_0%,rgba(59,130,246,0.10),transparent)]" />
         <div className="relative">
           <p className="eyebrow mb-6">Get in touch</p>

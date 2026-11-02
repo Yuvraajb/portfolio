@@ -17,7 +17,10 @@ import { usePathname } from "next/navigation";
  */
 export const Telemetry = () => {
   const pathname = usePathname();
-  const start = useRef(Date.now());
+  // Initialised to 0 rather than Date.now(): calling a clock during render is
+  // impure and, under StrictMode's double render, would seed a timestamp from
+  // a render that got thrown away. The effect sets the real start time.
+  const start = useRef(0);
   const maxScroll = useRef(0);
   const sent = useRef(false);
 
