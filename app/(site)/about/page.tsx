@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 
 export const metadata = getMetadata({
   title: "About",
+  path: "/about",
   description:
     "Yuvraaj Bhatter — Computer Science at Santa Clara University, building at the intersection of AI, iOS, and quantitative finance.",
 });

@@ -6,6 +6,7 @@ import { WorkGrid } from "./components/work-grid";
 
 export const metadata = getMetadata({
   title: "Work",
+  path: "/work",
   description:
     "Projects by Yuvraaj Bhatter — AI systems, iOS apps, quantitative research, and hardware experiments.",
 });

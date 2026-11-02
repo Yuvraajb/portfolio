@@ -1,7 +1,7 @@
 "use client";
 
 import type { Summary } from "@/app/lib/analytics/types";
-import type { SeoReport } from "@/app/lib/seo/audit";
+import type { SeoReport } from "@/app/lib/seo/rules";
 
 export const Panel = ({
   title,

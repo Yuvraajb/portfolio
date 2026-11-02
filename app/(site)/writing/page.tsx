@@ -7,6 +7,7 @@ import { formatDate } from "@/app/utils/format-date";
 
 export const metadata = getMetadata({
   title: "Writing",
+  path: "/writing",
   description:
     "Essays and notes by Yuvraaj Bhatter on software, machine learning, and building things.",
 });

@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: Params) {
     description: post.description,
     subtitle: formatDate(post.date),
     type: "article",
+    path: `/writing/${post.slug}`,
   });
 }
 

@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: Params) {
     title: project.name,
     description: project.description,
     subtitle: project.tag,
+    path: `/work/${project.slug}`,
   });
 }
 

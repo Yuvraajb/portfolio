@@ -6,6 +6,7 @@ import type { Book } from "@/app/lib/content/types";
 
 export const metadata = getMetadata({
   title: "Bookshelf",
+  path: "/bookshelf",
   description:
     "The books Yuvraaj Bhatter is currently reading, has finished, and wants to read next — synced live from Goodreads.",
 });

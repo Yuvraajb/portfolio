@@ -30,6 +30,7 @@ const getMetadata = ({
   image,
   type = "website",
   noIndex = false,
+  path,
 }: {
   title?: string;
   description?: string;
@@ -37,6 +38,8 @@ const getMetadata = ({
   image?: string;
   type?: "website" | "article";
   noIndex?: boolean;
+  /** Absolute path for the canonical URL, e.g. "/work/artemis-ii". */
+  path?: string;
 } = {}): Metadata => {
   // Fall back to the dynamic OG route, which renders the title into a card.
   const ogImage =
@@ -65,6 +68,10 @@ const getMetadata = ({
     robots: noIndex
       ? { index: false, follow: false }
       : { index: true, follow: true },
+    // Canonical URL. Resolved against metadataBase, so a page passes just its
+    // path. Without this every route advertised no canonical, which lets
+    // query-string and trailing-slash variants compete as separate URLs.
+    alternates: { canonical: path ?? "/" },
     openGraph: {
       title: resolvedTitle,
       description: resolvedDescription,
