@@ -1,16 +1,47 @@
 {
-  "name": "personal-website",
-  "version": "1.0.0",
+  "name": "portfolio",
+  "version": "2.0.0",
   "private": true,
-  "description": "Yuvraaj Bhatter's personal site -- a hand-rolled, zero-dependency static site generator.",
+  "description": "Yuvraaj Bhatter's personal site.",
   "scripts": {
-    "build": "node scripts/build.js",
-    "dev": "npm run build && node scripts/server.js",
-    "serve": "node scripts/server.js",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
     "sync-goodreads": "node scripts/sync-goodreads.js",
-    "sync-blog": "node scripts/sync-blog.js"
+    "sync-blog": "node scripts/sync-blog.js",
+    "sync-github": "node scripts/sync-github.js"
   },
-  "engines": {
-    "node": ">=18"
+  "dependencies": {
+    "@gsap/react": "^2.1.2",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/blob": "^2.8.2",
+    "@vercel/speed-insights": "^2.0.0",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.5.1",
+    "gray-matter": "^4.0.3",
+    "gsap": "^3.15.0",
+    "lucide-react": "^1.66.0",
+    "motion": "^12.43.0",
+    "next": "16.4.3",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.8.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-html": "^16.0.1",
+    "tw-animate-css": "^1.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "shadcn": "^4.23.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

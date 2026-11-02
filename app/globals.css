@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   Terminal Observatory — design system
+   Dark-only by decision (see PLAN.md §10.1): every reference is dark, the
+   instrument aesthetic *is* dark, and one mode means one thing to get right.
+   ========================================================================= */
+
+@theme inline {
+  /* Surfaces */
+  --color-bg: #07080a;
+  --color-surface: #0e1014;
+  --color-surface-2: #14171d;
+
+  /* Ink. The two grey steps are tuned to clear WCAG AA (4.5:1) for small text
+     on --color-bg while staying distinguishable from each other:
+       muted ≈ 8.1:1   faint ≈ 5.0:1
+     The original faint (#565b64) measured 2.88:1 and failed. */
+  --color-ink: #e8eaed;
+  --color-muted: #a1a7b0;
+  --color-faint: #7c828c;
+
+  /* One accent, two stops */
+  --color-accent: #3b82f6;
+  --color-accent-bright: #7dd3fc;
+
+  /* Structure */
+  --color-line: #1c1f26;
+  --color-line-bright: #2a2f39;
+
+  /* Literal family names: Tailwind v4's `@theme inline` resolves custom
+     properties at parse time, so it cannot read the runtime variables
+     next/font injects via className. */
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+  --font-serif: "Source Serif 4", "Source Serif 4 Fallback", ui-serif, Georgia, serif;
+
+  /* Motion — one easing, three durations, used everywhere */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 180ms;
+  --dur-base: 320ms;
+  --dur-slow: 640ms;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  /* Instrument-panel scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-bright);
+    border: 2px solid var(--color-bg);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-faint);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* Mono section label — the recurring instrument-panel tag */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  /* Hairline rule that fades out — used between sections */
+  .rule {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-line-bright),
+      transparent
+    );
+  }
+
+  /* Long-form reading, used by post bodies and about */
+  .prose-content {
+    font-family: var(--font-serif);
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: #cbd0d8;
+  }
+  .prose-content > * + * {
+    margin-top: 1.25em;
+  }
+  .prose-content h2,
+  .prose-content h3 {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    letter-spacing: -0.01em;
+    margin-top: 2em;
+  }
+  .prose-content h2 {
+    font-size: 1.5rem;
+  }
+  .prose-content h3 {
+    font-size: 1.1875rem;
+  }
+  .prose-content a {
+    color: var(--color-accent-bright);
+    text-underline-offset: 3px;
+    text-decoration: underline;
+  }
+  .prose-content code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--color-surface-2);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  .prose-content pre {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-x: auto;
+  }
+  .prose-content pre code {
+    background: none;
+    padding: 0;
+  }
+  .prose-content blockquote {
+    border-left: 2px solid var(--color-accent);
+    padding-left: 1rem;
+    color: var(--color-muted);
+  }
+  .prose-content ul,
+  .prose-content ol {
+    padding-left: 1.25rem;
+  }
+  .prose-content li + li {
+    margin-top: 0.4em;
+  }
+  .prose-content ul {
+    list-style: disc;
+  }
+  .prose-content ol {
+    list-style: decimal;
+  }
+  .prose-content img {
+    border-radius: 8px;
+    border: 1px solid var(--color-line);
+  }
+}
+
+@layer utilities {
+  /* Break an element out of the centered container, full viewport width. */
+  .full-bleed {
+    margin-inline: calc(50% - 50vw);
+    width: 100vw;
+  }
+
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* Honour the OS setting: kill transitions, animations, and smooth scrolling.
+   WebGL surfaces additionally refuse to mount (see components/webgl-surface). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
