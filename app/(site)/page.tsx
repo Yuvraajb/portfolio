@@ -1,5 +1,6 @@
 import { getBooks, getFeaturedProjects, getPosts, getSite } from "@/app/lib/content";
 import { fetchProfileStats } from "@/app/lib/sources/github";
+import { fetchContributions } from "@/app/lib/sources/github-contributions";
 import getMetadata from "@/app/lib/metadata";
 import { Hero } from "./components/hero";
 import { Pillars } from "./components/pillars";
@@ -15,11 +16,12 @@ export const metadata = getMetadata();
 
 export default async function LandingPage() {
   const site = await getSite();
-  const [projects, posts, books, profile] = await Promise.all([
+  const [projects, posts, books, profile, contributions] = await Promise.all([
     getFeaturedProjects(6),
     getPosts(),
     getBooks(),
     fetchProfileStats(site.github.username),
+    fetchContributions(site.github.username),
   ]);
 
   const reading = books.filter((b) => b.status === "currently-reading");
@@ -42,7 +44,11 @@ export default async function LandingPage() {
       />
       <StackMarquee stack={site.stack} />
       <Pillars pillars={site.pillars} stats={stats} />
-      <FeaturedWork projects={projects} />
+      <FeaturedWork
+        projects={projects}
+        contributions={contributions}
+        githubUrl={site.github.url}
+      />
       <WritingTeaser posts={posts.slice(0, 5)} />
       <BookshelfTeaser books={shelf} />
       <ContactBand email={site.email} />

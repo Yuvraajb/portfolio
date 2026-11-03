@@ -1,4 +1,5 @@
 import { Footer } from "@/components/footer";
+import { ObservationPanel } from "@/components/observation-panel";
 import { Topbar } from "@/components/topbar";
 import { getSite } from "@/app/lib/content";
 
@@ -18,6 +19,8 @@ export default async function SiteLayout({
       <Topbar links={site.nav} />
       <main className="flex-1">{children}</main>
       <Footer site={site} />
+      {/* Public site only — never over /admin or the full-bleed (bare) group. */}
+      <ObservationPanel email={site.email} />
     </>
   );
 }

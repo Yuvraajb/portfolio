@@ -177,6 +177,18 @@
   }
 }
 
+/* Travelling highlight across the contribution grid — a wave of light moving
+   over water. Transform-only so it runs on the compositor; one element does
+   the work that 366 per-cell animations would otherwise cost. */
+@keyframes contrib-wave {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
 @layer utilities {
   /* Break an element out of the centered container, full viewport width. */
   .full-bleed {

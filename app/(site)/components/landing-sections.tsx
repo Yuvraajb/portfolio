@@ -7,12 +7,14 @@ import StarBorder from "@/components/StarBorder";
 import MetaBalls from "@/components/MetaBalls";
 import { WebGLSurface } from "@/components/webgl-surface";
 import { WorkReveal } from "./work-reveal";
+import { ContributionHeatmap } from "@/components/contribution-heatmap";
 import {
   Container,
   Section,
   SectionHeading,
 } from "@/components/layout-primitives";
 import type { Book, PostSummary, Project } from "@/app/lib/content/types";
+import type { ContributionCalendar } from "@/app/lib/sources/github-contributions";
 import { formatDateShort } from "@/app/utils/format-date";
 import { usePrefersReducedMotion } from "@/app/utils/use-reduced-motion";
 
@@ -40,8 +42,17 @@ export const StackMarquee = ({ stack }: { stack: string[] }) => (
 );
 
 /** Selected work — hover-reveal rail: names left, generated art right. */
-export const FeaturedWork = ({ projects }: { projects: Project[] }) => (
-  <Section id="work">
+export const FeaturedWork = ({
+  projects,
+  contributions,
+  githubUrl,
+}: {
+  projects: Project[];
+  /** Null when GITHUB_TOKEN is unset or the API failed — section just omits it. */
+  contributions: ContributionCalendar | null;
+  githubUrl: string;
+}) => (
+  <Section id="work" label="Selected work">
     <Container>
       <SectionHeading
         index="02"
@@ -56,6 +67,10 @@ export const FeaturedWork = ({ projects }: { projects: Project[] }) => (
           </Link>
         }
       />
+      {contributions ? (
+        <ContributionHeatmap data={contributions} profileUrl={githubUrl} />
+      ) : null}
+
       <WorkReveal projects={projects} />
     </Container>
   </Section>
@@ -66,7 +81,7 @@ export const WritingTeaser = ({ posts }: { posts: PostSummary[] }) => {
   if (posts.length === 0) return null;
 
   return (
-    <Section id="writing">
+    <Section id="writing" label="Writing">
       <Container>
         <SectionHeading
           index="03"
@@ -124,7 +139,7 @@ export const BookshelfTeaser = ({ books }: { books: Book[] }) => {
   if (books.length === 0) return null;
 
   return (
-    <Section id="reading">
+    <Section id="reading" label="Bookshelf">
       <Container>
         <SectionHeading
           index="04"
@@ -185,7 +200,7 @@ export const ContactBand = ({ email }: { email: string }) => {
   const reduced = usePrefersReducedMotion();
 
   return (
-  <Section id="contact">
+  <Section id="contact" label="Contact">
     <Container>
       <div className="relative overflow-hidden border border-[var(--color-line)] bg-[var(--color-surface)] px-8 py-16 text-center md:py-24">
         {/* Organic forms circling the CTA.

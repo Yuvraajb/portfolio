@@ -18,12 +18,19 @@ export const Section = ({
   children,
   className = "",
   id,
+  label,
 }: {
   children: ReactNode;
   className?: string;
   id?: string;
+  /** Human-readable name, read by the observation panel's dwell tracking. */
+  label?: string;
 }) => (
-  <section id={id} className={`py-20 md:py-28 ${className}`}>
+  <section
+    id={id}
+    data-section={label ?? id}
+    className={`py-20 md:py-28 ${className}`}
+  >
     {children}
   </section>
 );

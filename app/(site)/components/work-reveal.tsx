@@ -31,6 +31,7 @@ export const WorkReveal = ({ projects }: { projects: Project[] }) => {
           <li key={project.slug}>
             <Link
               href={`/work/${project.slug}`}
+              data-observe={project.name}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               className="group relative flex items-center gap-5 border-b border-[var(--color-line)] py-6 transition-colors lg:py-7"

@@ -24,7 +24,7 @@ export const Pillars = ({
   pillars: Pillar[];
   stats: { label: string; value: number; suffix?: string }[];
 }) => (
-  <Section id="what-i-do">
+  <Section id="what-i-do" label="What I do">
     <Container>
       <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-20">
         {/* Visual */}

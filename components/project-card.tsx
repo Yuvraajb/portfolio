@@ -23,7 +23,11 @@ export const ProjectCard = ({
   project: Project;
   large?: boolean;
 }) => (
-  <Link href={`/work/${project.slug}`} className="group block h-full">
+  <Link
+    href={`/work/${project.slug}`}
+    data-observe={project.name}
+    className="group block h-full"
+  >
     <SpotlightCard
       className="h-full border border-[var(--color-line)] bg-[var(--color-surface)] p-7 transition-colors duration-300 group-hover:border-[var(--color-line-bright)]"
       spotlightColor="rgba(59, 130, 246, 0.16)"

@@ -157,8 +157,13 @@ let cached: Store | null = null;
 export const getStore = (): Store => {
   if (cached) return cached;
 
-  if (process.env.BLOB_READ_WRITE_TOKEN) cached = blobStore();
-  else if (process.env.NODE_ENV === "development") cached = fsStore();
+  // Development ALWAYS uses the filesystem, even when a Blob token is present.
+  // `vercel link` and `vercel blob create-store` both write
+  // BLOB_READ_WRITE_TOKEN into .env.local, so checking the token first meant
+  // every local page load was writing into the production analytics store and
+  // polluting real visitor data. Dev traffic must never reach it.
+  if (process.env.NODE_ENV === "development") cached = fsStore();
+  else if (process.env.BLOB_READ_WRITE_TOKEN) cached = blobStore();
   else cached = nullStore();
 
   return cached;
