@@ -3,32 +3,26 @@
 import { useEffect } from "react";
 import { TRANSMITTED_FIELDS } from "@/app/lib/analytics/transmitted";
 import { useObservation } from "@/app/lib/observation/use-observation";
-import {
-  bar,
-  clock,
-  metres,
-  score,
-  storeys,
-  verdictFor,
-} from "@/app/lib/observation/verdict";
+import { pxToMetres, pxToStoreys, score, verdictFor } from "@/app/lib/observation/verdict";
 import { usePrefersReducedMotion } from "@/app/utils/use-reduced-motion";
 import { useStoredFlag } from "@/app/utils/use-stored-flag";
+import { CursorTrailCanvas } from "./cursor-trail-canvas";
 
 /**
- * The site measures the visitor back, and says so.
+ * The site measures the visitor back — and shows them the picture.
  *
- * Every site on the internet measures you quietly. This one measures you to
- * four significant figures and shows you the readout — including an honest
- * list of what actually gets transmitted, which is the part nobody else
- * prints. The absurdity is the position.
+ * The first version of this was a column of mono labels and figures. Accurate,
+ * on-theme, and cold: nobody screenshots a readout. The thing worth showing a
+ * friend is *their own movement*, so the panel now leads with a live drawing
+ * of the visitor's pointer trail and says the numbers as sentences underneath.
  *
- * Contained by design: collapsed by default, dismissible for good, and
- * `fixed` so it can never shift layout (CLS stays 0).
+ * Still contained: collapsed by default, dismissible for good, `fixed` so it
+ * can never shift layout (CLS stays 0), and the canvas only runs while open.
  */
 
 const DISMISSED_KEY = "yb_obs_dismissed";
 const OPEN_KEY = "yb_obs_open";
-/** Auto-opens once at this score, so an early bouncer never sees zeroes. */
+/** Opens itself once there's a trail worth looking at. */
 const AUTO_OPEN_AT = 18;
 
 export const ObservationPanel = ({ email }: { email: string }) => {
@@ -40,13 +34,9 @@ export const ObservationPanel = ({ email }: { email: string }) => {
   const engagement = score(o);
   const verdict = verdictFor(engagement);
 
-  // Open state is *derived*, not synced. If the visitor hasn't chosen, the
-  // panel opens itself once engagement crosses the threshold; the moment they
-  // do choose, their choice wins forever. Engagement only ever rises, so this
-  // can't flap. Deriving it removes the effect that would otherwise set state
-  // on every tick.
-  const open =
-    choice ?? (reduced === false && engagement >= AUTO_OPEN_AT);
+  // Derived, not synced — see use-stored-flag. Engagement only rises, so this
+  // can't flap, and the visitor's explicit choice always wins.
+  const open = choice ?? (reduced === false && engagement >= AUTO_OPEN_AT);
 
   useEffect(() => {
     if (!open) return;
@@ -59,146 +49,153 @@ export const ObservationPanel = ({ email }: { email: string }) => {
 
   if (dismissed === true) return null;
 
-  const dismiss = () => setDismissed(true);
+  const metres = pxToMetres(o.cursorPx);
+  const storeys = pxToStoreys(o.descentPx);
 
   return (
     <aside
-      aria-label="Live observation of your visit"
-      // Updates 4× a second — announcing that would be hostile.
+      aria-label="A live drawing of how you've moved around this page"
       aria-live="off"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-3 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:px-0 sm:pb-0"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-3 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:px-0 sm:pb-0"
     >
       {open ? (
-        <div className="pointer-events-auto w-full max-w-[22rem] border border-[var(--color-line-bright)] bg-[var(--color-bg)]/95 font-mono text-[11px] shadow-2xl backdrop-blur-md">
-          <header className="flex items-center justify-between border-b border-[var(--color-line)] px-3 py-2">
-            <span className="tracking-[0.14em] text-[var(--color-faint)]">
-              SUBJECT {o.subject}
-            </span>
-            <span className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-[var(--color-accent-bright)]">
-                <span
-                  className={`inline-block size-1.5 rounded-full bg-current ${
-                    reduced ? "" : "animate-pulse"
-                  }`}
-                />
-                REC
-              </span>
+        <div className="pointer-events-auto w-full max-w-[20rem] overflow-hidden rounded-xl border border-[var(--color-line-bright)] bg-[var(--color-bg)]/92 shadow-2xl backdrop-blur-md">
+          <header className="flex items-center justify-between px-4 pt-3.5 pb-2">
+            <p className="text-[13px] text-[var(--color-ink)]">
+              You&rsquo;re drawing on my site
+            </p>
+            <span className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => setChoice(false)}
-                aria-label="Collapse observation panel"
+                aria-label="Collapse"
                 className="text-[var(--color-faint)] transition-colors hover:text-[var(--color-ink)]"
               >
-                —
+                <span aria-hidden className="block text-xs leading-none">—</span>
               </button>
               <button
                 type="button"
-                onClick={dismiss}
-                aria-label="Dismiss observation panel permanently"
+                onClick={() => setDismissed(true)}
+                aria-label="Hide this for good"
                 className="text-[var(--color-faint)] transition-colors hover:text-[var(--color-ink)]"
               >
-                ✕
+                <span aria-hidden className="block text-xs leading-none">✕</span>
               </button>
             </span>
           </header>
 
-          <dl className="flex flex-col gap-1.5 px-3 py-3">
-            <Row label="OBSERVED" value={clock(o.observedMs)} />
-            {/* Cursor travel is meaningless without a fine pointer. */}
-            <Row
-              label={o.coarsePointer ? "TOUCH PATH" : "CURSOR PATH"}
-              value={metres(o.cursorPx)}
+          {/* The picture: their own pointer path, live. */}
+          <div className="relative mx-4 aspect-[16/10] overflow-hidden rounded-lg border border-[var(--color-line)] bg-[radial-gradient(120%_90%_at_50%_0%,rgba(59,130,246,0.14),transparent_70%)]">
+            <CursorTrailCanvas
+              className="absolute inset-0 size-full"
+              paused={reduced === true}
             />
-            <Row label="DESCENT" value={storeys(o.descentPx)} />
-
-            {/* Revealed only once there's something real to show. */}
-            {o.longestDwell ? (
-              <Row
-                label="LONGEST DWELL"
-                value={`${o.longestDwell.label} — ${clock(o.longestDwell.ms)}`}
-              />
+            {o.cursorPx < 40 ? (
+              <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-[11px] text-[var(--color-faint)]">
+                {o.coarsePointer
+                  ? "Swipe around — I'll draw it."
+                  : "Move your mouse — I'll draw it."}
+              </p>
             ) : null}
-            {o.revisits ? (
-              <Row
-                label="REVISITS"
-                value={`${o.revisits.label} ×${o.revisits.count}`}
-              />
-            ) : null}
-            {o.idleMs > 3000 ? (
-              <Row label="IDLE (THINKING)" value={clock(o.idleMs)} />
-            ) : null}
-          </dl>
-
-          <div className="border-t border-[var(--color-line)] px-3 py-3">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="text-[var(--color-faint)]">ENGAGEMENT</span>
-              <span className="flex items-baseline gap-2">
-                <span className="text-[var(--color-accent)]">
-                  {bar(engagement)}
-                </span>
-                <span className="tabular-nums text-[var(--color-ink)]">
-                  {engagement}%
-                </span>
-              </span>
-            </div>
-
-            <div className="mt-2 flex items-baseline justify-between gap-3">
-              <span className="text-[var(--color-faint)]">VERDICT</span>
-              {verdict.action ? (
-                <a
-                  href={`mailto:${email}`}
-                  className="text-[var(--color-accent-bright)] underline underline-offset-2"
-                >
-                  {verdict.label}
-                </a>
-              ) : (
-                <span className="text-[var(--color-ink)]">{verdict.label}</span>
-              )}
-            </div>
           </div>
 
-          {/* The honest part. Every other site collects this quietly. */}
-          <footer className="border-t border-[var(--color-line)] px-3 py-3 text-[10px] leading-relaxed text-[var(--color-faint)]">
+          {/* The numbers, as sentences. */}
+          <div className="flex flex-col gap-1 px-4 pt-3.5 text-[12px] leading-relaxed text-[var(--color-muted)]">
             <p>
-              <span className="text-[var(--color-muted)]">LOCAL ONLY</span> —
-              everything above is measured in your browser and never sent
-              anywhere.
-            </p>
-            <p className="mt-1.5">
-              <span className="text-[var(--color-muted)]">
-                ALSO TRANSMITTED
+              That line is{" "}
+              <span className="text-[var(--color-accent-bright)] tabular-nums">
+                {metres.toFixed(1)} m
               </span>{" "}
-              — {TRANSMITTED_FIELDS.join(" · ")}. No cookies. Visitors are
-              counted with a salted hash that is rotated daily and cannot be
-              reversed.
+              long so far.
             </p>
-          </footer>
+            {storeys >= 0.4 ? (
+              <p>
+                You&rsquo;ve scrolled{" "}
+                <span className="text-[var(--color-accent-bright)] tabular-nums">
+                  {storeys.toFixed(1)}
+                </span>{" "}
+                {storeys < 1.5 ? "storeys" : "storeys"} of building.
+              </p>
+            ) : null}
+            {o.revisits ? (
+              <p>
+                You keep going back to{" "}
+                <span className="text-[var(--color-ink)]">
+                  {o.revisits.label}
+                </span>
+                .
+              </p>
+            ) : null}
+          </div>
+
+          <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-[var(--color-line)] px-4 py-3">
+            <span className="flex items-center gap-2">
+              <span
+                className={`inline-block size-1.5 rounded-full bg-[var(--color-accent-bright)] ${
+                  reduced ? "" : "animate-pulse"
+                }`}
+              />
+              <span className="text-[12px] text-[var(--color-muted)]">
+                {verdict.action ? (
+                  <a
+                    href={`mailto:${email}`}
+                    className="text-[var(--color-accent-bright)] hover:underline"
+                  >
+                    {verdict.label}
+                  </a>
+                ) : (
+                  verdict.label
+                )}
+              </span>
+            </span>
+            <span className="font-mono text-[10px] text-[var(--color-faint)] tabular-nums">
+              {engagement}%
+            </span>
+          </div>
+
+          {/* Kept, but demoted to a disclosure so it stops dominating the card.
+              Every site collects this quietly; this one says so out loud. */}
+          <details className="group border-t border-[var(--color-line)]">
+            <summary className="cursor-pointer list-none px-4 py-2.5 text-[11px] text-[var(--color-faint)] transition-colors hover:text-[var(--color-muted)]">
+              What do you actually know about me?
+              <span
+                aria-hidden
+                className="float-right transition-transform group-open:rotate-180"
+              >
+                ⌄
+              </span>
+            </summary>
+            <div className="px-4 pb-3.5 text-[11px] leading-relaxed text-[var(--color-faint)]">
+              <p>
+                The drawing and everything above it is measured in your browser
+                and never sent anywhere.
+              </p>
+              <p className="mt-1.5">
+                What does reach me: {TRANSMITTED_FIELDS.join(", ")}. No cookies,
+                no ad networks. Visitors are counted with a salted hash that
+                rotates daily and can&rsquo;t be reversed.
+              </p>
+            </div>
+          </details>
         </div>
       ) : (
         <button
           type="button"
           onClick={() => setChoice(true)}
-          aria-label="Expand observation panel"
-          className="pointer-events-auto flex items-center gap-2.5 border border-[var(--color-line-bright)] bg-[var(--color-bg)]/95 px-3 py-2 font-mono text-[11px] text-[var(--color-muted)] shadow-xl backdrop-blur-md transition-colors hover:text-[var(--color-ink)]"
+          // No aria-label here on purpose: the visible text *is* the
+          // accessible name. An aria-label that doesn't contain the visible
+          // text breaks voice control, because saying what you can see no
+          // longer matches what the control is called.
+          className="pointer-events-auto flex items-center gap-2.5 rounded-full border border-[var(--color-line-bright)] bg-[var(--color-bg)]/92 py-2 pr-4 pl-3 text-[12px] text-[var(--color-muted)] shadow-xl backdrop-blur-md transition-colors hover:text-[var(--color-ink)]"
         >
           <span
             className={`inline-block size-1.5 rounded-full bg-[var(--color-accent-bright)] ${
               reduced ? "" : "animate-pulse"
             }`}
           />
-          <span className="text-[var(--color-accent-bright)]">REC</span>
-          <span className="tabular-nums">{clock(o.observedMs)}</span>
+          I&rsquo;m drawing your mouse
         </button>
       )}
     </aside>
   );
 };
-
-const Row = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-baseline justify-between gap-3">
-    <dt className="shrink-0 text-[var(--color-faint)]">{label}</dt>
-    <dd className="truncate text-right tabular-nums text-[var(--color-ink)]">
-      {value}
-    </dd>
-  </div>
-);

@@ -177,15 +177,19 @@
   }
 }
 
-/* Travelling highlight across the contribution grid — a wave of light moving
-   over water. Transform-only so it runs on the compositor; one element does
-   the work that 366 per-cell animations would otherwise cost. */
-@keyframes contrib-wave {
-  from {
-    transform: translateX(0);
+/* Contribution cells twinkling like stars. Applied only to days that actually
+   have contributions (~50 cells, not 366), each with its own duration and
+   phase so they shimmer independently rather than pulsing in unison.
+   `--twinkle-dim` is set per cell: brighter days dip less, so the busiest
+   ones read as the steadiest stars. Opacity-only, so it stays on the
+   compositor. */
+@keyframes star-twinkle {
+  0%,
+  100% {
+    opacity: 1;
   }
-  to {
-    transform: translateX(300%);
+  50% {
+    opacity: var(--twinkle-dim, 0.6);
   }
 }
 

@@ -45,12 +45,10 @@ export const StackMarquee = ({ stack }: { stack: string[] }) => (
 export const FeaturedWork = ({
   projects,
   contributions,
-  githubUrl,
 }: {
   projects: Project[];
   /** Null when GITHUB_TOKEN is unset or the API failed — section just omits it. */
   contributions: ContributionCalendar | null;
-  githubUrl: string;
 }) => (
   <Section id="work" label="Selected work">
     <Container>
@@ -68,7 +66,7 @@ export const FeaturedWork = ({
         }
       />
       {contributions ? (
-        <ContributionHeatmap data={contributions} profileUrl={githubUrl} />
+        <ContributionHeatmap data={contributions} />
       ) : null}
 
       <WorkReveal projects={projects} />

@@ -44,11 +44,7 @@ export default async function LandingPage() {
       />
       <StackMarquee stack={site.stack} />
       <Pillars pillars={site.pillars} stats={stats} />
-      <FeaturedWork
-        projects={projects}
-        contributions={contributions}
-        githubUrl={site.github.url}
-      />
+      <FeaturedWork projects={projects} contributions={contributions} />
       <WritingTeaser posts={posts.slice(0, 5)} />
       <BookshelfTeaser books={shelf} />
       <ContactBand email={site.email} />

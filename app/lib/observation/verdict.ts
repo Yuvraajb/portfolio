@@ -46,14 +46,21 @@ export const score = (o: Observation): number => {
   return Math.round(Math.min(100, total));
 };
 
-/** Ordered low → high. `verdictFor` scans from the top. */
+/**
+ * Ordered low → high. `verdictFor` scans from the top.
+ *
+ * Written as things a person would actually say. The earlier set
+ * ("OBSERVING", "HIGHLY ENGAGED", "RECOMMENDATION: SAY HELLO") read like a
+ * clinical trial report — technically on-theme, but cold, and the whole point
+ * of this is to be likeable.
+ */
 export const TIERS: VerdictTier[] = [
-  { min: 0, label: "OBSERVING" },
-  { min: 20, label: "CURIOUS" },
-  { min: 40, label: "PROMISING" },
-  { min: 60, label: "HIGHLY ENGAGED" },
-  { min: 80, label: "EXCEPTIONAL" },
-  { min: 95, label: "RECOMMENDATION: SAY HELLO", action: true },
+  { min: 0, label: "just landed" },
+  { min: 20, label: "having a look around" },
+  { min: 40, label: "actually reading this" },
+  { min: 60, label: "still here — nice" },
+  { min: 80, label: "ok you really read it all" },
+  { min: 95, label: "we should probably talk →", action: true },
 ];
 
 export const verdictFor = (engagement: number): VerdictTier => {
