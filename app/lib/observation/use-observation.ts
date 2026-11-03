@@ -18,9 +18,52 @@ import type { Observation } from "./types";
 
 /** Publishes to React 4× a second. Fast enough to feel live, cheap to render. */
 const FLUSH_HZ = 4;
+/** How often breadth is written to sessionStorage. Must stay well above the
+ *  publish rate: these writes are synchronous and block the main thread. */
+const PERSIST_EVERY_MS = 4000;
 /** No input for this long counts as "thinking". */
 const IDLE_AFTER_MS = 2_000;
 const SESSION_KEY = "yb_observed_since";
+/** Distinct things seen, persisted so breadth survives route changes. */
+const SEEN_KEY = "yb_seen";
+
+type Seen = {
+  pages: string[];
+  sections: string[];
+  projects: string[];
+  /* Accumulators carry across routes too. A full page load remounts this hook,
+     and without persisting these a visitor's pointer travel reset to zero every
+     time they opened another page — which punished the exact behaviour the
+     leaderboard is supposed to reward. */
+  cursorPx: number;
+  descentPx: number;
+  idleMs: number;
+};
+
+const loadSeen = (): Seen => {
+  try {
+    const raw = sessionStorage.getItem(SEEN_KEY);
+    if (raw) return JSON.parse(raw) as Seen;
+  } catch {
+    /* corrupt value — start fresh rather than crash the panel */
+  }
+  return {
+    pages: [],
+    sections: [],
+    projects: [],
+    cursorPx: 0,
+    descentPx: 0,
+    idleMs: 0,
+  };
+};
+
+const saveSeen = (seen: Seen) => {
+  try {
+    sessionStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+  } catch {
+    /* private mode / quota — breadth just won't persist */
+  }
+};
 
 type Mutable = {
   cursorPx: number;
@@ -35,6 +78,9 @@ type Mutable = {
   visibleSections: Set<string>;
   /** Label currently under the pointer, so re-entries can be de-duplicated. */
   hovering: string | null;
+  seenPages: Set<string>;
+  seenSections: Set<string>;
+  seenProjects: Set<string>;
   lastTickAt: number;
 };
 
@@ -73,6 +119,9 @@ const EMPTY: Observation = {
   longestDwell: null,
   revisits: null,
   coarsePointer: false,
+  pages: 0,
+  sections: 0,
+  projects: 0,
 };
 
 export const useObservation = (enabled: boolean): Observation => {
@@ -85,11 +134,12 @@ export const useObservation = (enabled: boolean): Observation => {
     const start = sessionStart();
     const subject = subjectId();
     const coarsePointer = !window.matchMedia("(pointer: fine)").matches;
+    const stored = loadSeen();
 
     m.current = {
-      cursorPx: 0,
-      descentPx: 0,
-      idleMs: 0,
+      cursorPx: stored.cursorPx ?? 0,
+      descentPx: stored.descentPx ?? 0,
+      idleMs: stored.idleMs ?? 0,
       lastX: null,
       lastY: null,
       lastScrollY: window.scrollY,
@@ -98,6 +148,9 @@ export const useObservation = (enabled: boolean): Observation => {
       revisits: new Map(),
       visibleSections: new Set(),
       hovering: null,
+      seenPages: new Set(stored.pages).add(window.location.pathname),
+      seenSections: new Set(stored.sections),
+      seenProjects: new Set(stored.projects),
       lastTickAt: Date.now(),
     };
     const s = m.current;
@@ -150,7 +203,10 @@ export const useObservation = (enabled: boolean): Observation => {
       const label = el?.getAttribute("data-observe") ?? null;
       if (label === s.hovering) return;
       s.hovering = label;
-      if (label) s.revisits.set(label, (s.revisits.get(label) ?? 0) + 1);
+      if (label) {
+        s.revisits.set(label, (s.revisits.get(label) ?? 0) + 1);
+        s.seenProjects.add(label);
+      }
     };
 
     // Which labelled section is on screen, for the "longest dwell" line.
@@ -159,8 +215,12 @@ export const useObservation = (enabled: boolean): Observation => {
         for (const entry of entries) {
           const label = entry.target.getAttribute("data-section");
           if (!label) continue;
-          if (entry.isIntersecting) s.visibleSections.add(label);
-          else s.visibleSections.delete(label);
+          if (entry.isIntersecting) {
+            s.visibleSections.add(label);
+            s.seenSections.add(label);
+          } else {
+            s.visibleSections.delete(label);
+          }
         }
       },
       { threshold: 0.5 },
@@ -216,12 +276,41 @@ export const useObservation = (enabled: boolean): Observation => {
             ? { label: topRevisit[0], count: topRevisit[1] }
             : null,
         coarsePointer,
+        pages: s.seenPages.size,
+        sections: s.seenSections.size,
+        projects: s.seenProjects.size,
       });
+
+      // Persistence is deliberately NOT done here. sessionStorage writes are
+      // synchronous, and doing a JSON.stringify of these sets 4x a second put
+      // ~450ms of Total Blocking Time on the main thread — it took Lighthouse
+      // from 98 to 65. It now runs on a slow timer and on page exit instead,
+      // which is all the durability this actually needs.
     };
     const timer = window.setInterval(tick, 1000 / FLUSH_HZ);
 
+    const persist = () => {
+      saveSeen({
+        pages: [...s.seenPages],
+        sections: [...s.seenSections],
+        projects: [...s.seenProjects],
+        cursorPx: s.cursorPx,
+        descentPx: s.descentPx,
+        idleMs: s.idleMs,
+      });
+    };
+    // Every few seconds as a floor, plus whenever the page is actually going
+    // away — `pagehide` is the one that fires reliably on mobile Safari.
+    const persistTimer = window.setInterval(persist, PERSIST_EVERY_MS);
+    window.addEventListener("pagehide", persist);
+    document.addEventListener("visibilitychange", persist);
+
     return () => {
+      persist();
       window.clearInterval(timer);
+      window.clearInterval(persistTimer);
+      window.removeEventListener("pagehide", persist);
+      document.removeEventListener("visibilitychange", persist);
       io.disconnect();
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("touchmove", onTouchMove);

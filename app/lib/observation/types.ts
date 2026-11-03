@@ -16,6 +16,15 @@ export type Observation = {
   revisits: { label: string; count: number } | null;
   /** True when the device has no fine pointer — cursor path is meaningless. */
   coarsePointer: boolean;
+
+  /* Breadth — what the leaderboard actually scores. Distinct counts, kept in
+     sessionStorage so they survive client-side navigation between routes. */
+  /** Distinct routes visited this session. */
+  pages: number;
+  /** Distinct labelled sections actually seen. */
+  sections: number;
+  /** Distinct projects hovered or opened. */
+  projects: number;
 };
 
 export type VerdictTier = {

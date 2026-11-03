@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Draws the visitor's own pointer movement back at them.
@@ -23,12 +23,21 @@ const DPR_CAP = 2;
 export const CursorTrailCanvas = ({
   className = "",
   paused = false,
+  hint,
 }: {
   className?: string;
   paused?: boolean;
+  /** Shown until there's actually a trail to look at. */
+  hint?: string;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const points = useRef<{ x: number; y: number }[]>([]);
+  // The buffer empties on every page load, while the panel's distance total
+  // persists across navigation — so the hint has to key off *this* canvas
+  // having something in it, not off how far the visitor has moved overall.
+  // Keying it off distance left a blank box with no explanation after
+  // navigating.
+  const [hasTrail, setHasTrail] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -71,6 +80,7 @@ export const CursorTrailCanvas = ({
     window.addEventListener("touchmove", onTouch, { passive: true });
 
     let raf = 0;
+    let seenTrail = false;
     const draw = () => {
       raf = requestAnimationFrame(draw);
 
@@ -80,6 +90,10 @@ export const CursorTrailCanvas = ({
 
       const pts = points.current;
       if (pts.length < 2) return;
+      if (!seenTrail) {
+        seenTrail = true;
+        setHasTrail(true);
+      }
 
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
@@ -121,5 +135,14 @@ export const CursorTrailCanvas = ({
     };
   }, [paused]);
 
-  return <canvas ref={canvasRef} aria-hidden className={className} />;
+  return (
+    <>
+      <canvas ref={canvasRef} aria-hidden className={className} />
+      {hint && !hasTrail ? (
+        <p className="absolute inset-0 flex items-center justify-center px-6 text-center text-[11px] text-[var(--color-faint)]">
+          {hint}
+        </p>
+      ) : null}
+    </>
+  );
 };

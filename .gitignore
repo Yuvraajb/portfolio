@@ -45,3 +45,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local leaderboard store (dev only — production uses Vercel Blob)
+.leaderboard/

@@ -96,7 +96,9 @@ export const ContributionHeatmap = ({
   return (
     <div
       ref={ref}
-      className="full-bleed mb-16 px-6 lg:px-10"
+      // Container width, not full-bleed: edge-to-edge made it the loudest
+      // thing on the page and broke the margin every other section sits on.
+      className="mb-16"
       role="img"
       aria-label={`${data.total} GitHub contributions over the last year, across ${data.activeDays} active days.`}
     >
